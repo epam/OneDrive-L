@@ -4,6 +4,7 @@
 import os
 
 from setuptools import find_packages, setup
+import versioneer
 
 
 README_PATH = os.path.join(
@@ -22,6 +23,8 @@ setup(
     package_dir={'': 'src'},
     include_package_data=True,
     install_requires=map(str.strip, open('requirements.txt')),
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     classifiers=[
         'Development Status :: 1 - Planning',
         'Environment :: Console',
