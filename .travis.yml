@@ -1,11 +1,10 @@
 language: python
 python:
+  - "2.7"
   - "3.4"
   - "pypy"
 before_install:
   - "pip install coverage"
-  - "pip install scrutinizer-ocular"
   - "pip install nose"
 install: "pip install ."
-script: "./run_tests"
-after_script: "ocular"
+script: "bash ./run_tests"
