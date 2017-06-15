@@ -17,8 +17,5 @@ TODO
   for deletion and for creation. If the client consumed the deletion event,
   found out that it's a move and started synchronizing it, how to avoid a
   conflict if the client then consumes the creation event?
-- Choose between supporting multiple versions of Python and the libraries
-  and pin the versions and distribute all the dependencies within
-  the client's distribution.
 - Consider giving the project it's own original name, because the current
   one is too generic.
