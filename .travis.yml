@@ -5,6 +5,7 @@ python:
 before_install:
   - "pip install coverage"
   - "pip install scrutinizer-ocular"
+  - "pip install nose"
 install: "pip install ."
 script: "./run_tests"
 after_script: "ocular"
