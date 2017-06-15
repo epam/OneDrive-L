@@ -5,6 +5,5 @@ python:
   - "pypy"
 before_install:
   - "pip install coverage"
-  - "pip install nose"
 install: "pip install ."
 script: "bash ./run_tests"
