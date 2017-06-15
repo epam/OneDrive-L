@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "TESTING STARTS"
+
+#General tests and coverage
+nosetests --with-coverage --cover-erase --cover-package=od4b
