@@ -1,0 +1,10 @@
+language: python
+python:
+  - "3.4"
+  - "pypy"
+before_install:
+  - "pip install coverage"
+  - "pip install scrutinizer-ocular"
+install: "pip install ."
+script: "./run_tests"
+after_script: "ocular"
