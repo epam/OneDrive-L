@@ -6,6 +6,10 @@ OneDrive-L
 ==========
 OneDrive for Business Linux client
 
+Project Status
+==============
+The project is currently at the early development stage.
+
 TODO
 ====
 - Breakdown the class diagram into several pieces and add an
