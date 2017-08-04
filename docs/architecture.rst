@@ -239,3 +239,37 @@ Here is a list of basic synchronization tasks/problems:
       existing remote and local files and avoiding redundant
       downloads/uploads.
 
+Synchronization rules
+---------------------
+Generation of the business rules is automated and you can find the code that
+implements the automation in `rules.ipynb` file.
+
+======================================  ====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====
+..                                      0     1      2      3      4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26     27
+Conditions                              *     *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *
+LOCAL_FILE_CHANGED                                                                                                         FALSE  TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE
+REMOTE_FILE_CHANGED                                  TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   TRUE   TRUE   TRUE
+FILES_CONTENT_IS_SAME                         TRUE                                             FALSE  FALSE  FALSE  TRUE                                                           FALSE  FALSE  FALSE  TRUE                        TRUE
+FILES_METADATA_IS_SAME                        TRUE                               FALSE  FALSE  FALSE  FALSE  FALSE  FALSE                                            FALSE  FALSE  FALSE  FALSE  FALSE  FALSE         FALSE  FALSE  FALSE
+LOCAL_FILE_DOES_NOT_EXIST               TRUE  FALSE  TRUE   TRUE   TRUE   TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE
+REMOTE_FILE_DOES_NOT_EXIST              TRUE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   TRUE   TRUE   TRUE   TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   FALSE  FALSE  FALSE
+LOCAL_COPIES_DO_EXIST                                FALSE  TRUE   TRUE   TRUE   FALSE  TRUE   FALSE  TRUE   TRUE                                                                                                            TRUE
+REMOTE_COPIES_DO_EXIST                                                                                                            FALSE  TRUE   TRUE   TRUE          FALSE  TRUE   FALSE  TRUE   TRUE
+LOCAL_COPY_COUNTERPART_DOES_NOT_EXIST                              FALSE  TRUE                        FALSE  TRUE                                                                                                            FALSE
+REMOTE_COPY_COUNTERPART_DOES_NOT_EXIST                                                                                                          FALSE  TRUE                               FALSE  TRUE
+LOCAL_COPY_METADATA_IS_SAME                                 FALSE                       FALSE
+Actions                                 *     *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *
+REMOTE_COPY_METADATA_IS_SAME                                                                                                             FALSE                              FALSE
+DOWNLOAD_REMOTE_FILE                                 TRUE                                      TRUE
+UPLOAD_LOCAL_FILE                                                                                                                 TRUE                                             TRUE
+DELETE_REMOTE_FILE                                                                                                                                            TRUE
+DELETE_LOCAL_FILE                                                                                                          TRUE
+UPDATE_LOCAL_FILE_METADATA                                  TRUE                 TRUE   TRUE   TRUE                 TRUE                                                                                                            TRUE
+UPDATE_REMOTE_FILE_METADATA                                                                                                              TRUE                        TRUE   TRUE   TRUE                 TRUE
+RENAME_LOCAL_FILE                                                                                                                                                                                              TRUE   TRUE   TRUE   TRUE
+COPY_LOCAL_FILE                                                    TRUE                               TRUE                                                                                                                   TRUE   TRUE
+COPY_REMOTE_FILE                                                                                                                                TRUE                                      TRUE
+MOVE_LOCAL_FILE                                                           TRUE                               TRUE
+MOVE_REMOTE_FILE                                                                                                                                       TRUE                                      TRUE
+DO_NOTHING                              TRUE  TRUE
+======================================  ====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====
