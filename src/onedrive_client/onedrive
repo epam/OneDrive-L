@@ -1,0 +1,17 @@
+#!/usr/bin/python
+
+from auth import authenticate
+from events import EventsHandler, DBusEvents
+from monitors import OneDriveMonitor
+from service import OneDriveService
+
+client = authenticate()
+
+service = OneDriveService(client)
+
+dbus = DBusEvents()
+events = EventsHandler(dbus)
+
+monitor = OneDriveMonitor(service)
+monitor.register(events)
+monitor.run()
