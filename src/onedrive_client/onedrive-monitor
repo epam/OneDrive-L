@@ -1,0 +1,17 @@
+#!/usr/bin/python
+
+from monitor.auth import authenticate
+from monitor.handlers import DataHandler, DBusHandler
+from monitor.base import OneDriveMonitor
+from monitor.service import OneDriveService
+
+client = authenticate()
+
+service = OneDriveService(client)
+
+dbus = DBusHandler()
+dbus_handler = DataHandler(dbus)
+
+monitor = OneDriveMonitor(service)
+monitor.register(dbus_handler)
+monitor.run()

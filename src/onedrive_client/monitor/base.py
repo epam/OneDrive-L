@@ -1,5 +1,4 @@
 from time import sleep
-import json
 
 
 class OneDriveMonitor(object):
@@ -20,12 +19,11 @@ class OneDriveMonitor(object):
         self._run = True
         while self._run:
             items = self.service.get_changes()
-            for item in items:
-                self.dispatch(json.dumps(item.to_dict()))
-
+            self.dispatch(items)
             sleep(self._timeout)
 
     def stop(self):
+        print "Stopping OneDrive monitor ..."
         self._run = False
 
     def get_subscribers(self):
