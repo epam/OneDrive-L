@@ -16,7 +16,7 @@ class DBusHandler(dbus.service.Object):
     dbus_topic = '/onedrive/monitor/event'
 
     def __init__(self):
-        self.bn = dbus.service.BusName(DBusEvents.dbus_name,bus=dbus.SessionBus())
+        self.bn = dbus.service.BusName(DBusHandler.dbus_name,bus=dbus.SessionBus())
         super(DBusHandler, self).__init__(self.bn, DBusHandler.dbus_topic)
 
     def process(self, data):
@@ -27,12 +27,12 @@ class DBusHandler(dbus.service.Object):
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_created(self, data):
-        print "Event on_created ..."
+        print("Event on_created ...")
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_modified(self, data):
-        print "Event on_modified ..."
+        print("Event on_modified ...")
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_deleted(self, data):
-        print "Event on_deleted ..."
+        print("Event on_deleted ...")

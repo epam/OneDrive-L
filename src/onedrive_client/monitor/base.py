@@ -15,7 +15,7 @@ class OneDriveMonitor(object):
         self.__subscribers.discard(subscriber)
 
     def run(self):
-        print "Starting OneDrive monitor ..."
+        print("Starting OneDrive monitor ...")
         self._run = True
         while self._run:
             items = self.service.get_changes()
@@ -23,7 +23,7 @@ class OneDriveMonitor(object):
             sleep(self._timeout)
 
     def stop(self):
-        print "Stopping OneDrive monitor ..."
+        print("Stopping OneDrive monitor ...")
         self._run = False
 
     def get_subscribers(self):
