@@ -41,9 +41,9 @@ class DBusHandler(dbus.service.Object):
         """
         Initialize dbus service
         """
-        self.bn = dbus.service.BusName(DBusHandler.dbus_name,
-                                       bus=dbus.SessionBus())
-        super(DBusHandler, self).__init__(self.bn, DBusHandler.dbus_topic)
+        self.b_name = dbus.service.BusName(DBusHandler.dbus_name,
+                                           bus=dbus.SessionBus())
+        super(DBusHandler, self).__init__(self.b_name, DBusHandler.dbus_topic)
 
     def process(self, data):
         """
