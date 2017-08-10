@@ -4,8 +4,8 @@
 from json import dumps
 
 import dbus
-import dbus.service
 import dbus.glib
+import dbus.service
 
 
 class DataHandler(object):
