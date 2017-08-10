@@ -2,15 +2,29 @@ import dbus
 import dbus.service
 import dbus.glib
 
-from pprint import pprint
 from json import dumps
 
 
 class DataHandler(object):
+    """
+    Consumer for OneDrive
+    Receives remote data
+    """
+
     def __init__(self, source):
+        """
+        Init a specific handler
+        :param source: an object that provides
+        interface for processing data
+        """
         self.source = source
 
     def receive(self, data):
+        """
+        Invokes by service when data comes
+        :param data: raw data
+        :return:
+        """
         self.source.process(data)
 
 
@@ -19,10 +33,18 @@ class DBusHandler(dbus.service.Object):
     dbus_topic = '/onedrive/monitor/event'
 
     def __init__(self):
+        """
+        Initialize dbus service
+        """
         self.bn = dbus.service.BusName(DBusHandler.dbus_name,bus=dbus.SessionBus())
         super(DBusHandler, self).__init__(self.bn, DBusHandler.dbus_topic)
 
     def process(self, data):
+        """
+        The data processor
+        :param data: raw data
+        :return:
+        """
         print("Processing data ...")
         for item in data:
             # invokes a proper event
@@ -37,12 +59,27 @@ class DBusHandler(dbus.service.Object):
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_created(self, data):
+        """
+        Handle new items
+        :param data: str, json dumps
+        :return:
+        """
         print("Event on_created ...")
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_modified(self, data):
+        """
+        Handle modified items
+        :param data: str, json dumps
+        :return:
+        """
         print("Event on_modified ...")
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_deleted(self, data):
+        """
+        Handle deleted items
+        :param data: str, json dumps
+        :return:
+        """
         print("Event on_deleted ...")

@@ -1,4 +1,8 @@
 class OneDriveService(object):
+    """
+    Provides access to the OneDrive API
+    """
+
     def __init__(self, client, token=None):
         self.token = token
         self.root_path = 'root'

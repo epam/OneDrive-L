@@ -3,10 +3,10 @@
 import sys
 import argparse
 
-from monitor.auth import authenticate
-from monitor.handlers import DataHandler, DBusHandler
-from monitor.base import OneDriveMonitor
-from monitor.service import OneDriveService
+from onedrive.auth import authenticate
+from onedrive.handlers import DataHandler, DBusHandler
+from onedrive.base import OneDriveMonitor
+from onedrive.service import OneDriveService
 
 from utils.cmdargs import SubParserHelpFormatter
 from utils.errors import OneDriveMonitorError
@@ -26,6 +26,11 @@ class MonitorVersionArgument(argparse.Action):
 
 
 def create_parser():
+    """
+    Create command parser
+    Initialize subcommands
+    :return: argparse.ArgumentParser
+    """
     parser = argparse.ArgumentParser(
         prog=_ONEDRIVE_MONITOR,
         formatter_class=SubParserHelpFormatter,
@@ -57,6 +62,10 @@ def configure_monitor():
 
 
 def start_monitor():
+    """
+    Launch onedrive monitor
+    :return: integer
+    """
     client = authenticate()
     if client:
         service = OneDriveService(client)
