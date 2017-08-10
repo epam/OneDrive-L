@@ -1,3 +1,6 @@
+""" Provides functionality to monitor remote changes
+"""
+
 from time import sleep
 
 
@@ -33,7 +36,7 @@ class OneDriveMonitor(object):
         Start monitor. Fetch remote data, feed subscribers
         :return:
         """
-        print("Starting OneDrive monitor ...")
+        print('Starting OneDrive monitor ...')
         self._run = True
         while self._run:
             items = self.service.get_changes()
@@ -45,7 +48,7 @@ class OneDriveMonitor(object):
         Stop monitor
         :return:
         """
-        print("Stopping OneDrive monitor ...")
+        print('Stopping OneDrive monitor ...')
         self._run = False
 
     def get_subscribers(self):

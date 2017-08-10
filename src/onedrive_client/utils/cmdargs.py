@@ -1,3 +1,5 @@
+""" Common functionality for command parser
+"""
 import argparse
 
 

@@ -1,8 +1,11 @@
+""" Processing data
+"""
+
+from json import dumps
+
 import dbus
 import dbus.service
 import dbus.glib
-
-from json import dumps
 
 
 class DataHandler(object):
@@ -29,6 +32,8 @@ class DataHandler(object):
 
 
 class DBusHandler(dbus.service.Object):
+    """ Dbus data handler
+    """
     dbus_name = 'onedrive.client'
     dbus_topic = '/onedrive/monitor/event'
 
@@ -36,7 +41,8 @@ class DBusHandler(dbus.service.Object):
         """
         Initialize dbus service
         """
-        self.bn = dbus.service.BusName(DBusHandler.dbus_name,bus=dbus.SessionBus())
+        self.bn = dbus.service.BusName(DBusHandler.dbus_name,
+                                       bus=dbus.SessionBus())
         super(DBusHandler, self).__init__(self.bn, DBusHandler.dbus_topic)
 
     def process(self, data):
@@ -45,7 +51,7 @@ class DBusHandler(dbus.service.Object):
         :param data: raw data
         :return:
         """
-        print("Processing data ...")
+        print('Processing data ...')
         for item in data:
             # invokes a proper event
             if hasattr(item, 'deleted') and item.deleted is not None:
@@ -64,7 +70,7 @@ class DBusHandler(dbus.service.Object):
         :param data: str, json dumps
         :return:
         """
-        print("Event on_created ...")
+        print('Event on_created ...')
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_modified(self, data):
@@ -73,7 +79,7 @@ class DBusHandler(dbus.service.Object):
         :param data: str, json dumps
         :return:
         """
-        print("Event on_modified ...")
+        print('Event on_modified ...')
 
     @dbus.service.signal('onedrive.monitor.event')
     def on_deleted(self, data):
@@ -82,4 +88,4 @@ class DBusHandler(dbus.service.Object):
         :param data: str, json dumps
         :return:
         """
-        print("Event on_deleted ...")
+        print('Event on_deleted ...')

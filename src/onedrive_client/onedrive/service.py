@@ -1,3 +1,7 @@
+""" Provides service to interact with remote API
+"""
+
+
 class OneDriveService(object):
     """
     Provides access to the OneDrive API

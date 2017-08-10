@@ -1,3 +1,7 @@
+""" Defines OneDrive client errors
+"""
+
+
 class OneDriveClientError(Exception):
     pass
 
