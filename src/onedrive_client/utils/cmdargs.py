@@ -14,6 +14,6 @@ class SubParserHelpFormatter(argparse.RawDescriptionHelpFormatter):
         parts = s_class._format_action(action)
 
         if action.nargs == argparse.PARSER:
-            parts = "\n".join(parts.split("\n")[1:])
+            parts = '\n'.join(parts.split('\n')[1:])
 
         return parts
