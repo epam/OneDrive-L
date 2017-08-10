@@ -4,3 +4,4 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
+dbus-python>=1.2.4
