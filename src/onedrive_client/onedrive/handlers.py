@@ -3,12 +3,12 @@
 
 from json import dumps
 
-import dbus
-import dbus.service
-import dbus.glib
+import dbus  # pylint: disable=import-error
+import dbus.glib  # pylint: disable=import-error
+import dbus.service  # pylint: disable=import-error
 
 
-class DataHandler(object):
+class DataHandler(object):  # pylint: disable=too-few-public-methods
     """
     Consumer for OneDrive
     Receives remote data
@@ -41,9 +41,9 @@ class DBusHandler(dbus.service.Object):
         """
         Initialize dbus service
         """
-        self.bn = dbus.service.BusName(DBusHandler.dbus_name,
-                                       bus=dbus.SessionBus())
-        super(DBusHandler, self).__init__(self.bn, DBusHandler.dbus_topic)
+        self.b_name = dbus.service.BusName(DBusHandler.dbus_name,
+                                           bus=dbus.SessionBus())
+        super(DBusHandler, self).__init__(self.b_name, DBusHandler.dbus_topic)
 
     def process(self, data):
         """
@@ -70,6 +70,8 @@ class DBusHandler(dbus.service.Object):
         :param data: str, json dumps
         :return:
         """
+        assert self
+        assert data
         print('Event on_created ...')
 
     @dbus.service.signal('onedrive.monitor.event')
@@ -79,6 +81,8 @@ class DBusHandler(dbus.service.Object):
         :param data: str, json dumps
         :return:
         """
+        assert self
+        assert data
         print('Event on_modified ...')
 
     @dbus.service.signal('onedrive.monitor.event')
@@ -88,4 +92,6 @@ class DBusHandler(dbus.service.Object):
         :param data: str, json dumps
         :return:
         """
+        assert self
+        assert data
         print('Event on_deleted ...')
