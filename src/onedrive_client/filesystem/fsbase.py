@@ -2,9 +2,9 @@
 Provides functionality to monitor local filesystem changes
 """
 
-import inotify.adapters
-import os
 from multiprocessing import Process
+import os
+import inotify.adapters
 
 
 class FileSystemMonitor(object):
@@ -14,7 +14,7 @@ class FileSystemMonitor(object):
 
     def __init__(self):
         self._folder = None
-        self._process = False
+        self._process = None
         self._subscribers = set()
 
     @property
@@ -93,7 +93,7 @@ class FileSystemMonitor(object):
                     subscriber.update(file_object)
 
 
-class Event(object):
+class Event(object):  # pylint: disable=too-few-public-methods
     """
     Object of local filesystem event
     """
@@ -104,12 +104,27 @@ class Event(object):
         """
 
         (header, type_names, path, filename) = event
-        self.event = event
+        self._event = event
         self.header_wd = header.wd
         self.header_mask = header.mask
         self.header_cookie = header.cookie
         self.header_len = header.len
         self.path = path.decode('utf-8')
         self.filename = filename.decode('utf-8')
-        self.full_path = os.path.join(self.path, self.filename)
         self.type_names = type_names
+
+    @property
+    def event(self):
+        """
+        :return: inotify event
+        """
+
+        return self._event
+
+    @property
+    def file_path(self):
+        """
+        :return: full path to file
+        """
+
+        return os.path.join(self.path, self.filename)
