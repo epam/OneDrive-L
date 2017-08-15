@@ -4,7 +4,8 @@ Provides functionality to monitor local filesystem changes
 
 from multiprocessing import Process
 import os
-import inotify.adapters
+
+import inotify.adapters  # pylint: disable=import-error
 
 
 class FileSystemMonitor(object):
@@ -93,7 +94,7 @@ class FileSystemMonitor(object):
                     subscriber.update(file_object)
 
 
-class Event(object):  # pylint: disable=too-few-public-methods
+class Event(object):  # pylint: disable=too-few-public-methods, too-many-instance-attributes
     """
     Object of local filesystem event
     """
