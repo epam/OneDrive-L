@@ -1,0 +1,101 @@
+#!/usr/bin/python
+
+import sys
+import argparse
+
+from onedrive.auth import authenticate
+from onedrive.handlers import DataHandler, DBusHandler
+from onedrive.base import OneDriveMonitor
+from onedrive.service import OneDriveService
+
+from utils.cmdargs import SubParserHelpFormatter
+from utils.errors import OneDriveMonitorError
+
+_ONEDRIVE_MONITOR = 'onedrive-monitor'
+_ONEDRIVE_MONITOR_VERSION = '0.1.0'
+
+
+class MonitorVersionArgument(argparse.Action):
+    """
+    Displays onedrive-monitor version and exit
+    """
+
+    def __call__(self, *args, **kwargs):
+        print('{0}: {1}'.format(_ONEDRIVE_MONITOR, _ONEDRIVE_MONITOR_VERSION))
+        sys.exit(0)
+
+
+def create_parser():
+    """
+    Create command parser
+    Initialize subcommands
+    :return: argparse.ArgumentParser
+    """
+    parser = argparse.ArgumentParser(
+        prog=_ONEDRIVE_MONITOR,
+        formatter_class=SubParserHelpFormatter,
+        epilog="Run '{0} COMMAND --help' for more "
+               "information on a command.".format(_ONEDRIVE_MONITOR))
+
+    # global options
+    parser.add_argument('--version', action=MonitorVersionArgument,
+                        nargs=0, help='display version information')
+    parser.add_argument('--exclude-dirs', nargs='+',
+                        default=[], metavar='dir1,dir2',
+                        help='specify comma-separated directories '
+                             'to exclude from synchronization')
+
+    # sub commands
+    subparsers = parser.add_subparsers(title='Commands')
+    setup = subparsers.add_parser('setup', help='setup procedure')
+    setup.set_defaults(which='setup')
+
+    start = subparsers.add_parser('start', help='start onedrive-monitor')
+    start.set_defaults(which='start')
+
+    return parser
+
+
+def configure_monitor():
+    print('Launch configuration wizard ...')
+    return 0
+
+
+def start_monitor():
+    """
+    Launch onedrive monitor
+    :return: integer
+    """
+    client = authenticate()
+    if client:
+        service = OneDriveService(client)
+
+        dbus = DBusHandler()
+        dbus_handler = DataHandler(dbus)
+
+        monitor = OneDriveMonitor(service)
+        monitor.register(dbus_handler)
+        monitor.run()
+
+    return 0
+
+
+def main():
+    status = 0
+    try:
+        parser = create_parser()
+        args = parser.parse_args()
+
+        if args.which == 'setup':
+            status = configure_monitor()
+        elif args.which == 'start':
+            start_monitor()
+
+    except OneDriveMonitorError as mess:
+        status = 1
+
+    return status
+
+
+if __name__ == '__main__':
+    sys.exit(main())
