@@ -4,4 +4,9 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
-onedrivesdk
+certifi==2017.7.27.1      # via requests
+chardet==3.0.4            # via requests
+idna==2.6                 # via requests
+onedrivesdk==1.1.8
+requests==2.18.4          # via onedrivesdk
+urllib3==1.22             # via requests
