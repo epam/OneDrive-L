@@ -40,7 +40,7 @@ class FilesystemEventHandler(object):  # pylint: disable=too-few-public-methods
                 self.source.event(dumps(event.__dict__))
 
 
-class FileSystemDbusHandler(dbus.service.Object):
+class FileSystemDbusHandler(dbus.service.Object):  # pylint: disable=too-few-public-methods
     """ Dbus data handler
     """
     dbus_name = 'onedrive.client'
