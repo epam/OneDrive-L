@@ -12,6 +12,7 @@ import dbus.service  # pylint: disable=import-error
 IMP_EVENTS = ['IN_ATTRIB', 'IN_CLOSE_WRITE', 'IN_MOVED_TO', 'IN_MOVED_FROM',
               'IN_CREATE', 'IN_DELETE']
 
+
 # pylint: disable=too-few-public-methods
 class FilesystemEventHandler(object):
     """
@@ -38,6 +39,7 @@ class FilesystemEventHandler(object):
         for i_event in IMP_EVENTS:
             if event.__dict__.get(i_event, False):
                 self.source.event(dumps(event.__dict__))
+
 
 # pylint: disable=too-few-public-methods
 class FileSystemDbusHandler(dbus.service.Object):
