@@ -7,22 +7,21 @@ from setuptools import find_packages, setup
 import versioneer
 
 
-README_PATH = os.path.join(
+REQUIREMENTS_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    'README.rst'
+    'requirements.txt'
 )
 
 
 setup(
-    name='onedrive_client',
+    name='onedrive_service',
     author='EPAM Systems',
     author_email='OneDriveTeam@epam.com',
-    description='OneDrive Client',
-    long_description=open(README_PATH).read(),
+    description='OneDrive Client - OneDrive Service',
     packages=find_packages(where='src', include=[]),
     package_dir={'': 'src'},
     include_package_data=True,
-    install_requires=map(str.strip, open('requirements.txt')),
+    install_requires=map(str.strip, open(REQUIREMENTS_PATH)),
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     classifiers=[

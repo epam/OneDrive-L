@@ -1,0 +1,8 @@
+include requirements.txt
+
+graft src/
+
+include versioneer.py
+include src/synchronization_service/_version.py
+
+global-exclude *.pyc
