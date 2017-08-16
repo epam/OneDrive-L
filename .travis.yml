@@ -1,12 +1,26 @@
-language: python
-python:
-  - "3.6"
-install:
-  - pip install 'tox>=2.4.1,<3'
-env:
-  matrix:
-    - TOXENV=py36
-    - TOXENV=flake8
-    - TOXENV=pylint
-script:
-  - tox -v
+matrix:
+  include:
+    - language: python
+      python: "3.6"
+      install:
+        - pip install 'tox>=2.4.1,<3'
+      script:
+        - cd app && tox
+    - language: python
+      python: "3.6"
+      install:
+        - pip install 'tox>=2.4.1,<3'
+      script:
+        - cd filesystem_service && tox
+    - language: python
+      python: "3.6"
+      install:
+        - pip install 'tox>=2.4.1,<3'
+      script:
+        - cd onedrive_service && tox
+    - language: python
+      python: "3.6"
+      install:
+        - pip install 'tox>=2.4.1,<3'
+      script:
+        - cd synchronization_service && tox

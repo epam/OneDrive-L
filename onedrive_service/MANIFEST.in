@@ -1,10 +1,8 @@
-include README.rst
-include LICENSE
 include requirements.txt
 
 graft src/
 
 include versioneer.py
-include src/onedrive_client/_version.py
+include src/onedrive_service/_version.py
 
 global-exclude *.pyc
