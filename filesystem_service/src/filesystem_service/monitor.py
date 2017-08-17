@@ -148,7 +148,6 @@ class FileSystemMonitor(object):
                         self.add_watch(file_object.file_path)
 
 
-
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
 class Event(object):
     """
