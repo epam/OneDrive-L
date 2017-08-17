@@ -105,6 +105,23 @@ class FileSystemMonitor(object):
         return [res[0]for res in os.walk(self.folder)
                 if res[0] not in self.exclude_folder]
 
+    def add_watch(self, folder):
+        """
+        :param folder: full path to folder to be watched. Type: string
+        :return:
+        """
+
+        self.notifier.add_watch(folder.encode())
+
+    def remove_watch(self, folder):
+        """
+        :param folder: full path to folder to be removed from watch list.
+        Type: string
+        :return:
+        """
+
+        self.notifier.remove_watch(folder.encode())
+
     def notify(self):
         """
         Notify subscribers about filesystem events
@@ -119,6 +136,17 @@ class FileSystemMonitor(object):
                 for subscriber in self._subscribers:
                     file_object = Event(event)
                     subscriber.update(file_object)
+
+                    # Removing a watch on folder 'cause it was deleted
+                    if hasattr(file_object, 'IN_DELETE') and \
+                            os.path.isdir(file_object.file_path):
+                        self.remove_watch(file_object.file_path)
+
+                    # Adding a watch on folder 'cause we're being recursive
+                    if hasattr(file_object, 'IN_CREATE') and \
+                            os.path.isdir(file_object.file_path):
+                        self.add_watch(file_object.file_path)
+
 
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
