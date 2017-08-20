@@ -138,30 +138,32 @@ Components overview
 
 Highlights:
 
-1. *SynchronizationStateStorageService* stores metadata for last
-   successfully synchronized files. It is required because otherwise it
-   is impossible to make decisions about whether to overwrite a file or
-   not (see the note in the diagram).
-2. Service-classes provide basic infrastructural and domain-specific
+1. The architecture features service-oriented design.
+   The main reason why it is done that way is because it allows to implement
+   different components in different languages which could be instrumental
+   in case of this project since some languages are more suitable for low
+   level tasks (working with filesystem), offer more performance and some
+   are more suitable for high-level tasks like business logic.
+2. *StorageService* serves as a "hub" that stores information about changed
+   (or "dirty") files and information about last successfully synchronized
+   (or "pristine") files.
+   Storing information about pristine files is required because otherwise it is
+   impossible to make decisions about whether to overwrite a file or not
+   (see the note in the diagram).
+   Storing information about dirty files is required to free monitor-services
+   from responsibility of ensuring that changes that they monitor are propagated
+   and synchronized. With the Storage Service they could just save them and
+   "forget" about them.
+   It also allows to store arbitrary key-value data and this capability is
+   used by OneDrive Service to store last known snapshot token.
+3. *entities* package provides contracts that is used in communication
+   between the services.
+4. Util-classes provide basic infrastructural and domain-specific
    operations that are needed by higher-level components.
-3. *entities* package contains entity-definitions that are 1 to 1 match
-   to the OneDrive API entities.
-4. *DataStorageService* is used for storing arbitrary data. Currently it
-   is required for storing last snapshot token returned by the API (see
-   delta method).
 5. All the business logic related to how files are synchronized (e.g.
    conflict resolution, moves/copies handling) is encapsulated within
    *SynchronizationService*.
-6. Synchronizer service does not contain business logic, but instead
-   assembles all the components required for synchronization, bootstraps
-   a synchronization process and continuously monitors and synchronizes
-   changes.
-7. The whole system is supposed to be built on cooperative concurrency
-   execution model.
-   Most probably it will be gevent.
-   This choice was made because the project deals with events and I/O so
-   a light-weight concurrency + task scheduler, that gevent provides
-   “for free”, seems to fit perfectly.
+6. Protobuf and ZeroMQ are supposed to be used for interprocess communication.
 
 Files synchronization
 ---------------------
