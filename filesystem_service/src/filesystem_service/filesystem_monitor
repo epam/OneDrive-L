@@ -1,0 +1,113 @@
+#!/usr/bin/python
+
+"""
+Service module
+"""
+
+import argparse
+import sys
+import os
+import yaml
+
+from errors import FilesystemMonitorException
+from monitor import FileSystemMonitor
+from handlers import FilesystemEventHandler, FileSystemDbusHandler
+
+_FILESYSTEM_MONITOR = 'filesystem_monitor'
+_FILESYSTEM_MONITOR_VERSION = '0.1.0'
+_CONFIG_PATH = '/etc/onedrivefs.yml'
+
+
+def load_config():
+    """
+    :return: content of the configuration file as dictionary
+    """
+
+    if not os.path.isfile(_CONFIG_PATH):
+        return None
+
+    with open(_CONFIG_PATH, 'r') as stream:
+        try:
+            content = yaml.load(stream)
+        except yaml.YAMLError as exc:
+            message = 'Failed to load configuration file'
+            raise FilesystemMonitorException(message) from exc
+    return content
+
+
+def create_config(data):
+    """
+    :param data: dictionary with configuration
+    :return:
+    """
+
+    with open(_CONFIG_PATH, 'w') as outfile:
+        try:
+            yaml.dump(data, outfile, default_flow_style=False)
+        except yaml.YAMLError as exc:
+            message = 'Failed to write configuration file'
+            raise FilesystemMonitorException(message) from exc
+
+
+def start_monitoring(config):
+    """
+    :param config: dictionary with configuration
+    :return:
+    """
+
+    dbservice = FileSystemDbusHandler()
+    handler = FilesystemEventHandler(dbservice)
+    monitor = FileSystemMonitor()
+    monitor.register_subscriber(handler)
+    monitor.folder = config['watch']
+    for folder in config['exclude']:
+        monitor.add_exclude_folder(folder)
+    monitor.start()
+
+
+def main():
+    """
+    :return:
+    """
+
+    desc = 'Starts monitoring of specified local folder(s)'
+    epilog = 'OneDrive-L Filesystem Monitoring Service'
+
+    parser = argparse.ArgumentParser(prog='filesystem-monitor',
+                                     description=desc, epilog=epilog)
+    parser.add_argument('-v', '--version', dest='version', action='version',
+                        version='%(prog)s ' + _FILESYSTEM_MONITOR_VERSION,
+                        help='Display version information')
+    parser.add_argument('-p', '--path', dest='path', metavar='dir1',
+                        default=False, action='store',
+                        help='Set path for monitoring')
+    parser.add_argument('-e', '--exclude', dest='exclude', nargs='+',
+                        metavar='dir1,dir2', default=[], action='store',
+                        help='Exclude paths from monitored folder')
+    args = parser.parse_args()
+
+    config = load_config()
+    if not args.path and not config:
+        return 1
+
+    if config:
+        if args.path:
+            config['watch'] = args.path
+        if args.exclude:
+            config['exclude'] = args.exclude
+
+    if not config:
+        config = dict(watch=args.path,
+                      exclude=args.exclude if args.exclude else [])
+        create_config(config)
+
+    try:
+        start_monitoring(config)
+    except:
+        raise FilesystemMonitorException('Failed to start monitoring service')
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
