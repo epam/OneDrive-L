@@ -9,6 +9,7 @@ import sys
 import os
 import yaml
 
+from daemon import Daemon
 from errors import FilesystemMonitorException
 from monitor import FileSystemMonitor
 from handlers import FilesystemEventHandler, FileSystemDbusHandler
@@ -16,6 +17,7 @@ from handlers import FilesystemEventHandler, FileSystemDbusHandler
 _FILESYSTEM_MONITOR = 'filesystem_monitor'
 _FILESYSTEM_MONITOR_VERSION = '0.1.0'
 _CONFIG_PATH = '/etc/onedrivefs.yml'
+_PID_FILE = '/var/run/filesystem-monitor.pid'
 
 
 def load_config():
@@ -49,12 +51,12 @@ def create_config(data):
             raise FilesystemMonitorException(message) from exc
 
 
-def start_monitoring(config):
+def start_monitoring():
     """
-    :param config: dictionary with configuration
     :return:
     """
 
+    config = load_config()
     dbservice = FileSystemDbusHandler()
     handler = FilesystemEventHandler(dbservice)
     monitor = FileSystemMonitor()
@@ -84,8 +86,16 @@ def main():
     parser.add_argument('-e', '--exclude', dest='exclude', nargs='+',
                         metavar='dir1,dir2', default=[], action='store',
                         help='Exclude paths from monitored folder')
-    args = parser.parse_args()
 
+    subparsers = parser.add_subparsers(title='Commands')
+    setup = subparsers.add_parser('start', help='start filesystem_monitor')
+    setup.set_defaults(which='start')
+    start = subparsers.add_parser('stop', help='stop filesystem_monitor')
+    start.set_defaults(which='stop')
+    start = subparsers.add_parser('restart', help='restart filesystem_monitor')
+    start.set_defaults(which='restart')
+
+    args = parser.parse_args()
     config = load_config()
     if not args.path and not config:
         return 1
@@ -101,10 +111,14 @@ def main():
                       exclude=args.exclude if args.exclude else [])
         create_config(config)
 
-    try:
-        start_monitoring(config)
-    except:
-        raise FilesystemMonitorException('Failed to start monitoring service')
+    daemon = Daemon(app="filesystem_monitor", pid=_PID_FILE,
+                    action=start_monitoring)
+    if args.which == 'start':
+        daemon.start()
+    elif args.which == 'stop':
+        daemon.stop()
+    elif args.which == 'restart':
+        daemon.restart()
 
     return 0
 
