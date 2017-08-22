@@ -4,8 +4,8 @@ Module with demonizing instruments
 
 import logging
 from logging import handlers
-import sys
 import os
+import sys
 import signal
 from time import sleep
 
@@ -36,10 +36,10 @@ class Daemon(Daemonize):
 
         # Initialize syslog.
         # It will correctly work on OS X, Linux and FreeBSD.
-        if sys.platform == "darwin":
-            syslog_address = "/var/run/syslog"
+        if sys.platform == 'darwin':
+            syslog_address = '/var/run/syslog'
         else:
-            syslog_address = "/dev/log"
+            syslog_address = '/dev/log'
 
         # We will continue with syslog initialization only
         # if actually have such capabilities
@@ -51,8 +51,8 @@ class Daemon(Daemonize):
             else:
                 syslog.setLevel(logging.INFO)
             # Try to mimic to normal syslog messages.
-            formatter = logging.Formatter("%(asctime)s %(name)s: %(message)s",
-                                          "%b %e %H:%M:%S")
+            formatter = logging.Formatter('%(asctime)s %(name)s: %(message)s',
+                                          '%b %e %H:%M:%S')
             syslog.setFormatter(formatter)
 
             self.logger.addHandler(syslog)
@@ -82,7 +82,7 @@ class Daemon(Daemonize):
                 sleep(0.1)
         except OSError as err:
             err_str = str(err.args)
-            if err_str.find("No such process") > 0:
+            if err_str.find('No such process') > 0:
                 if os.path.exists(self.pid):
                     os.remove(self.pid)
             else:
@@ -94,6 +94,6 @@ class Daemon(Daemonize):
         Restart the daemon
         """
 
-        self.logger.warning("Restarting daemon.")
+        self.logger.warning('Restarting daemon.')
         self.stop()
         self.start()
