@@ -5,8 +5,8 @@ Module with demonizing instruments
 import logging
 from logging import handlers
 import os
-import sys
 import signal
+import sys
 from time import sleep
 
 from daemonize import Daemonize  # pylint: disable=import-error
