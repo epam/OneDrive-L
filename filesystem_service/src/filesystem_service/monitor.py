@@ -5,7 +5,7 @@ Provides functionality to monitor local filesystem changes
 from multiprocessing import Process
 import os
 
-import inotify.adapters  # pylint: disable=import-error
+import inotify.adapters
 
 
 class FileSystemMonitor(object):

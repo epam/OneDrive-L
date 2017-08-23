@@ -4,9 +4,9 @@ Filesystem event handlers
 
 from json import dumps
 
-import dbus  # pylint: disable=import-error
-import dbus.glib  # pylint: disable=import-error
-import dbus.service  # pylint: disable=import-error
+import dbus
+import dbus.glib
+import dbus.service
 
 
 IMP_EVENTS = ['IN_ATTRIB', 'IN_CLOSE_WRITE', 'IN_MOVED_TO', 'IN_MOVED_FROM',
