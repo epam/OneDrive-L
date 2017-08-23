@@ -9,7 +9,7 @@ import sys
 import os
 import yaml
 
-from daemon import Daemon
+from onedrive_client.utils.daemon import Daemon
 from errors import FilesystemMonitorException
 from monitor import FileSystemMonitor
 from handlers import FilesystemEventHandler, FileSystemDbusHandler

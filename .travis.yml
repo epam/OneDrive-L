@@ -24,3 +24,7 @@ matrix:
         - pip install 'tox>=2.4.1,<3'
       script:
         - cd synchronization_service && tox
+addons:
+  apt:
+    packages:
+      - dbus*
