@@ -18,7 +18,7 @@ def main():
 
 
 # pylint: disable=invalid-name
-daemon = daemon.Daemon(app="testapp", pid=argv[2], action=main)
+daemon = daemon.Daemon(app='testapp', pid=argv[2], action=main)
 if argv[1] == 'start':
     daemon.start()
 elif argv[1] == 'stop':
