@@ -36,7 +36,7 @@ class TestDaemonStart(TestDaemon):
         """
 
         os.system(self.cmd % (THIS_FILE_PATH, 'start', self.pidfile))
-        sleep(.1)
+        sleep(1)
 
         self.assertTrue(os.path.exists(self.pidfile),
                         'Pidfile has not been created')
@@ -54,8 +54,8 @@ class TestDaemonStart(TestDaemon):
         :return:
         """
 
-        os.system("kill `cat %s`" % self.pidfile)
-        sleep(.1)
+        os.system('kill `cat %s`' % self.pidfile)
+        sleep(1)
 
 
 class TestDaemonStop(TestDaemon):
@@ -71,13 +71,13 @@ class TestDaemonStop(TestDaemon):
         """
 
         os.system(self.cmd % (THIS_FILE_PATH, 'start', self.pidfile))
-        sleep(.1)
+        sleep(1)
 
         with open(self.pidfile) as pid_file:
             pid = pid_file.read().rstrip()
 
         os.system(self.cmd % (THIS_FILE_PATH, 'stop', self.pidfile))
-        sleep(.1)
+        sleep(1)
 
         self.assertFalse(psutil.pid_exists(int(pid)),
                          'Process with {0} pid still exists'.format(pid))
@@ -98,10 +98,10 @@ class TestDaemonRestart(TestDaemon):
         """
 
         os.system(self.cmd % (THIS_FILE_PATH, 'start', self.pidfile))
-        sleep(.1)
+        sleep(1)
 
         os.system(self.cmd % (THIS_FILE_PATH, 'restart', self.pidfile))
-        sleep(.1)
+        sleep(1)
 
         self.assertTrue(os.path.exists(self.pidfile),
                         'Pidfile has not been created')
@@ -119,5 +119,5 @@ class TestDaemonRestart(TestDaemon):
         :return:
         """
 
-        os.system("kill `cat %s`" % self.pidfile)
+        os.system('kill `cat %s`' % self.pidfile)
         sleep(.1)
