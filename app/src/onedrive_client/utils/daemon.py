@@ -35,7 +35,7 @@ class Daemon(Daemonize):
 
         # Try killing the daemon process
         try:
-            while 1:
+            while True:
                 os.kill(pid, signal.SIGTERM)
                 sleep(.1)
         except OSError as err:
