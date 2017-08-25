@@ -4,3 +4,4 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
+inotify==0.2.8

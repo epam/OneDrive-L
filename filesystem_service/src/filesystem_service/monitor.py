@@ -2,7 +2,6 @@
 Provides functionality to monitor local filesystem changes
 """
 
-from multiprocessing import Process
 import os
 
 import inotify.adapters
@@ -13,12 +12,15 @@ class FileSystemMonitor(object):
     Monitor local filesystem changes and inform subscribers
     """
 
-    def __init__(self):
-        self._folder = None
-        self._exclude_folder = set()
-        self._process = None
+    def __init__(self, folder):
+        """
+        :param folder: folder to be watched. Type: string
+        """
+
+        self._root_folder = folder.encode()
+        self._exclude_folders = set()
         self._subscribers = set()
-        self.notifier = inotify.adapters.Inotify()
+        self._notifier = inotify.adapters.Inotify()
 
     @property
     def subscribers(self):
@@ -28,7 +30,7 @@ class FileSystemMonitor(object):
 
         return self._subscribers
 
-    def register_subscriber(self, subs):
+    def subscribe(self, subs):
         """
         Register new subscriber
         :param subs: an instance of subscriber
@@ -37,7 +39,7 @@ class FileSystemMonitor(object):
 
         self._subscribers.add(subs)
 
-    def unregister_subscriber(self, subs):
+    def unsubscribe(self, subs):
         """
         Remove subscriber
         :param subs: an instance of subscriber
@@ -46,106 +48,62 @@ class FileSystemMonitor(object):
 
         self._subscribers.remove(subs)
 
-    @property
-    def exclude_folder(self):
-        """
-        :return: list of folders to be excluded from monitoring
-        """
-
-        return self._exclude_folder
-
     def add_exclude_folder(self, folder):
         """
         :param folder:full path to folder. Type: string
         :return:
         """
 
-        self._exclude_folder.add(folder.encode())
+        self._exclude_folders.add(folder.encode())
 
-    @property
-    def folder(self):
-        """
-        :return: Monitored folder
-        """
-
-        return self._folder
-
-    @folder.setter
-    def folder(self, folder):
-        """
-        :param folder: full path to folder to be monitored. Type: string
-        :return:
-        """
-
-        self._folder = folder.encode()
-
-    def start(self):
-        """
-        Start process that generates filesystem events
-        :return:
-        """
-
-        self._process = Process(target=self.notify)
-        self._process.start()
-
-    def stop(self):
-        """
-        Terminate filesystem event generator process
-        :return:
-        """
-
-        if self._process:
-            self._process.terminate()
-
-    def gen_watch_list(self):
+    def __gen_watch_list(self):
         """
         :return: list of directoried to watch without excludes
         """
 
-        return [res[0]for res in os.walk(self.folder)
-                if res[0] not in self.exclude_folder]
+        return [res[0] for res in os.walk(self._root_folder)
+                if res[0] not in self._exclude_folders]
 
-    def add_watch(self, folder):
+    def __add_watch(self, folder):
         """
         :param folder: full path to folder to be watched. Type: string
         :return:
         """
 
-        self.notifier.add_watch(folder.encode())
+        self._notifier.add_watch(folder.encode())
 
-    def remove_watch(self, folder):
+    def __remove_watch(self, folder):
         """
         :param folder: full path to folder to be removed from watch list.
         Type: string
         :return:
         """
 
-        self.notifier.remove_watch(folder.encode())
+        self._notifier.remove_watch(folder.encode())
 
-    def notify(self):
+    def monitor(self):
         """
         Notify subscribers about filesystem events
         :return:
         """
 
-        for folder in self.gen_watch_list():
-            self.notifier.add_watch(folder)
+        for folder in self.__gen_watch_list():
+            self._notifier.add_watch(folder)
 
-        for event in self.notifier.event_gen():
-            if event is not None:
+        for event in self._notifier.event_gen():
+            if event:
                 for subscriber in self._subscribers:
                     file_object = Event(event)
                     subscriber.update(file_object)
 
                     # Removing a watch on folder 'cause it was deleted
-                    if hasattr(file_object, 'IN_DELETE') and \
-                            os.path.isdir(file_object.file_path):
-                        self.remove_watch(file_object.file_path)
+                    if hasattr(file_object, 'IN_DELETE'):
+                        self.__remove_watch(file_object.file_path)
 
                     # Adding a watch on folder 'cause we're being recursive
                     if hasattr(file_object, 'IN_CREATE') and \
                             os.path.isdir(file_object.file_path):
-                        self.add_watch(file_object.file_path)
+                        self.__add_watch(file_object.file_path)
 
 
 # pylint: disable=too-few-public-methods, too-many-instance-attributes
