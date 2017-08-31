@@ -20,8 +20,12 @@ def main():
 # pylint: disable=invalid-name
 daemon = daemon.Daemon(app='testapp', pid=argv[2], action=main)
 if argv[1] == 'start':
-    daemon.start()
+    exit(daemon.start())
 elif argv[1] == 'stop':
-    daemon.stop()
-if argv[1] == 'restart':
-    daemon.restart()
+    exit(daemon.stop())
+elif argv[1] == 'restart':
+    exit(daemon.restart())
+elif argv[1] == 'try-restart':
+    exit(daemon.try_restart())
+elif argv[1] == 'status':
+    exit(daemon.status())
