@@ -18,10 +18,13 @@ setup(
     author='EPAM Systems',
     author_email='OneDriveTeam@epam.com',
     description='OneDrive Client - OneDrive Service',
-    packages=find_packages(where='src', include=[]),
+    packages=find_packages(
+        where='src',
+        include=['onedrive_service', 'onedrive_service.*']
+    ),
     package_dir={'': 'src'},
     include_package_data=True,
-    install_requires=map(str.strip, open(REQUIREMENTS_PATH)),
+    install_requires=list(map(str.strip, open(REQUIREMENTS_PATH))),
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     classifiers=[
