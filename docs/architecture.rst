@@ -138,30 +138,32 @@ Components overview
 
 Highlights:
 
-1. *SynchronizationStateStorageService* stores metadata for last
-   successfully synchronized files. It is required because otherwise it
-   is impossible to make decisions about whether to overwrite a file or
-   not (see the note in the diagram).
-2. Service-classes provide basic infrastructural and domain-specific
+1. The architecture features service-oriented design.
+   The main reason why it is done that way is because it allows to implement
+   different components in different languages which could be instrumental
+   in case of this project since some languages are more suitable for low
+   level tasks (working with filesystem), offer more performance and some
+   are more suitable for high-level tasks like business logic.
+2. *StorageService* serves as a "hub" that stores information about changed
+   (or "dirty") files and information about last successfully synchronized
+   (or "pristine") files.
+   Storing information about pristine files is required because otherwise it is
+   impossible to make decisions about whether to overwrite a file or not
+   (see the note in the diagram).
+   Storing information about dirty files is required to free monitor-services
+   from responsibility of ensuring that changes that they monitor are propagated
+   and synchronized. With the Storage Service they could just save them and
+   "forget" about them.
+   It also allows to store arbitrary key-value data and this capability is
+   used by OneDrive Service to store last known snapshot token.
+3. *entities* package provides contracts that is used in communication
+   between the services.
+4. Util-classes provide basic infrastructural and domain-specific
    operations that are needed by higher-level components.
-3. *entities* package contains entity-definitions that are 1 to 1 match
-   to the OneDrive API entities.
-4. *DataStorageService* is used for storing arbitrary data. Currently it
-   is required for storing last snapshot token returned by the API (see
-   delta method).
 5. All the business logic related to how files are synchronized (e.g.
    conflict resolution, moves/copies handling) is encapsulated within
    *SynchronizationService*.
-6. Synchronizer service does not contain business logic, but instead
-   assembles all the components required for synchronization, bootstraps
-   a synchronization process and continuously monitors and synchronizes
-   changes.
-7. The whole system is supposed to be built on cooperative concurrency
-   execution model.
-   Most probably it will be gevent.
-   This choice was made because the project deals with events and I/O so
-   a light-weight concurrency + task scheduler, that gevent provides
-   “for free”, seems to fit perfectly.
+6. Protobuf and ZeroMQ are supposed to be used for interprocess communication.
 
 Files synchronization
 ---------------------
@@ -239,3 +241,37 @@ Here is a list of basic synchronization tasks/problems:
       existing remote and local files and avoiding redundant
       downloads/uploads.
 
+Synchronization rules
+---------------------
+Generation of the business rules is automated and you can find the code that
+implements the automation in `rules.ipynb` file.
+
+======================================  ====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====
+..                                      0     1      2      3      4      5      6      7      8      9      10     11     12     13     14     15     16     17     18     19     20     21     22     23     24     25     26     27
+Conditions                              *     *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *
+LOCAL_FILE_CHANGED                                                                                                         FALSE  TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE
+REMOTE_FILE_CHANGED                                  TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   TRUE   TRUE   TRUE
+FILES_CONTENT_IS_SAME                         TRUE                                             FALSE  FALSE  FALSE  TRUE                                                           FALSE  FALSE  FALSE  TRUE                        TRUE
+FILES_METADATA_IS_SAME                        TRUE                               FALSE  FALSE  FALSE  FALSE  FALSE  FALSE                                            FALSE  FALSE  FALSE  FALSE  FALSE  FALSE         FALSE  FALSE  FALSE
+LOCAL_FILE_DOES_NOT_EXIST               TRUE  FALSE  TRUE   TRUE   TRUE   TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE
+REMOTE_FILE_DOES_NOT_EXIST              TRUE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   TRUE   TRUE   TRUE   TRUE   FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  FALSE  TRUE   FALSE  FALSE  FALSE
+LOCAL_COPIES_DO_EXIST                                FALSE  TRUE   TRUE   TRUE   FALSE  TRUE   FALSE  TRUE   TRUE                                                                                                            TRUE
+REMOTE_COPIES_DO_EXIST                                                                                                            FALSE  TRUE   TRUE   TRUE          FALSE  TRUE   FALSE  TRUE   TRUE
+LOCAL_COPY_COUNTERPART_DOES_NOT_EXIST                              FALSE  TRUE                        FALSE  TRUE                                                                                                            FALSE
+REMOTE_COPY_COUNTERPART_DOES_NOT_EXIST                                                                                                          FALSE  TRUE                               FALSE  TRUE
+LOCAL_COPY_METADATA_IS_SAME                                 FALSE                       FALSE
+Actions                                 *     *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *      *
+REMOTE_COPY_METADATA_IS_SAME                                                                                                             FALSE                              FALSE
+DOWNLOAD_REMOTE_FILE                                 TRUE                                      TRUE
+UPLOAD_LOCAL_FILE                                                                                                                 TRUE                                             TRUE
+DELETE_REMOTE_FILE                                                                                                                                            TRUE
+DELETE_LOCAL_FILE                                                                                                          TRUE
+UPDATE_LOCAL_FILE_METADATA                                  TRUE                 TRUE   TRUE   TRUE                 TRUE                                                                                                            TRUE
+UPDATE_REMOTE_FILE_METADATA                                                                                                              TRUE                        TRUE   TRUE   TRUE                 TRUE
+RENAME_LOCAL_FILE                                                                                                                                                                                              TRUE   TRUE   TRUE   TRUE
+COPY_LOCAL_FILE                                                    TRUE                               TRUE                                                                                                                   TRUE   TRUE
+COPY_REMOTE_FILE                                                                                                                                TRUE                                      TRUE
+MOVE_LOCAL_FILE                                                           TRUE                               TRUE
+MOVE_REMOTE_FILE                                                                                                                                       TRUE                                      TRUE
+DO_NOTHING                              TRUE  TRUE
+======================================  ====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====  =====
