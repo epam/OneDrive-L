@@ -2,3 +2,4 @@
 # pylint: disable=wildcard-import
 from .base import Transport, Address  # noqa
 from .exceptions import *  # noqa
+from .tcp import TCPTransport  # noqa

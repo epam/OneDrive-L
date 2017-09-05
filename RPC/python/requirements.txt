@@ -4,4 +4,6 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
+gevent==1.2.2
+greenlet==0.4.12          # via gevent
 logbook==1.1.0
