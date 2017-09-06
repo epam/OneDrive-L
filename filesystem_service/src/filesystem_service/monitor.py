@@ -37,7 +37,8 @@ class FileSystemMonitor(object):
         :return:
         """
 
-        self._subscribers.add(subs)
+        if subs not in self.subscribers:
+            self._subscribers.add(subs)
 
     def unsubscribe(self, subs):
         """
@@ -79,7 +80,7 @@ class FileSystemMonitor(object):
         :return:
         """
 
-        self._notifier.remove_watch(folder.encode())
+        self._notifier.remove_watch(folder.encode(), superficial=True)
 
     def monitor(self):
         """
