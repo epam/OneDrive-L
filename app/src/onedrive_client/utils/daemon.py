@@ -49,9 +49,9 @@ class Daemon(Daemonize):
 
         pid = self.get_pid()
         if not pid:
-            message = 'pidfile %s does not exist. ' + \
-                      'Daemon not running?\n'
-            print(message, self.pid)
+            message = 'pidfile %s does not exist. '\
+                      'Daemon not running?\n' % str(self.pid)
+            print(message)
             # not an error in a restart
             if force:
                 return 0

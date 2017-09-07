@@ -1,0 +1,93 @@
+#!/usr/bin/python
+
+"""
+Service module for the filesystem monitoring
+"""
+
+import argparse
+from pathlib import Path
+
+from filesystem_service.monitor import FileSystemMonitor
+from onedrive_client.utils.constants import ACTIONS
+from onedrive_client.utils.daemon import Daemon
+
+_FILESYSTEM_MONITOR = 'fsmonitor'
+_FILESYSTEM_MONITOR_VERSION = '0.1.0'
+_CONFIG_PATH = '/etc/fsmonitor.yml'
+_PID_FILE = '/var/run/fsmonitor.pid'
+
+
+# pylint: disable=bare-except
+# pylint: disable=too-few-public-methods
+class Monitor(object):
+    """
+    Monitoring starter
+    """
+
+    def __init__(self):
+        try:
+            self.config = load_config()
+        # ToDo: add proper exception
+        except:
+            print('Failed to load config')
+            exit(1)
+
+    def start(self):
+        """
+        Starts monitoring of file system events
+        """
+
+        mon = FileSystemMonitor(self.config.get('watch', str(Path.home())))
+        # ToDo: add subscribers
+        for exclude in self.config.get('exclude', []):
+            mon.add_exclude_folder(exclude)
+        mon.monitor()
+
+
+def load_config():
+    """
+    :return:
+    """
+
+    return dict()
+
+
+def main():
+    """
+    :return:
+    """
+
+    desc = 'Starts monitoring of specified local folder'
+    epilog = 'OneDrive-L Filesystem Monitoring Service'
+
+    parser = argparse.ArgumentParser(prog='filesystem-monitor',
+                                     description=desc, epilog=epilog)
+    parser.add_argument('-v', '--version', dest='version', action='version',
+                        version='%(prog)s ' + _FILESYSTEM_MONITOR_VERSION,
+                        help='Display version information')
+
+    subparsers = parser.add_subparsers(title='Commands')
+    for action, help_msg in ACTIONS.items():
+        setup = subparsers.add_parser(action, help=help_msg)
+        setup.set_defaults(which=action)
+
+    args = parser.parse_args()
+
+    fsmonitor = Monitor()
+    daemon = Daemon(app="filesystem-monitor", pid=_PID_FILE,
+                    action=fsmonitor.start)
+
+    if args.which == 'start':
+        return daemon.start()
+    elif args.which == 'stop':
+        return daemon.stop()
+    elif args.which in ('restart', 'reload'):
+        return daemon.restart()
+    elif args.which in ('try-restart', 'force-reload'):
+        return daemon.try_restart()
+    elif args.which == 'status':
+        return daemon.try_restart()
+
+
+if __name__ == '__main__':
+    exit(main())
