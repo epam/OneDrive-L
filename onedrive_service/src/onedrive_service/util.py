@@ -1,5 +1,7 @@
 """ Provides service to interact with remote API """
 # pylint: disable=too-many-arguments
+import json
+
 import onedrivesdk
 
 
@@ -136,12 +138,72 @@ class OneDriveUtil(object):
         Init an upload session
         :param name:
         :param parent_path:
-        :return:
+        :return: onedrivesdk.UploadSession
         """
         item = onedrivesdk.ChunkedUploadSessionDescriptor()
         item.name = name
 
         return self.client.item(path=parent_path).create_session(item).post()
+
+    def upload_session(self, upload_url, data, total, next_range=0):
+        """
+        Upload the file, or a portion of the file
+        It is possible to upload the entire file in one fragment up to 60 MiB
+
+        The recommended fragment size is between 5-10 MiB.
+        :param upload_url: str, url to upload
+        :param data: data to include in the body of the request
+        :param total: integer, all fragments size in bytes
+        :param next_range: integer,  next expected ranges value to determine
+        where to start the next fragment
+        :return: onedrivesdk.UploadSession
+        """
+        data_length = len(data)
+        builder = onedrivesdk.ItemRequestBuilder(upload_url, self.client)
+
+        req = builder.request()
+        req.method = 'PUT'
+
+        # init header options
+        header_options = self._init_upload_session_header(next_range,
+                                                          data_length, total)
+        for option in header_options:
+            req.append_option(option)
+
+        # send chunk of data
+        raw_response = req.send(data=data)
+        entity = onedrivesdk.UploadSession(json.loads(raw_response.content))
+
+        return entity
+
+    def upload_session_status(self, upload_url):
+        """
+        Check the upload session status
+
+        You can request the status of the file at any time,
+        not just when the upload has failed.
+        The server will respond with a list of missing
+        byte ranges that need to be uploaded.
+        :param upload_url:
+        :return: onedrivesdk.UploadSession
+        """
+        builder = onedrivesdk.ItemRequestBuilder(upload_url, self.client)
+
+        req = builder.request()
+        req.method = 'GET'
+        raw_response = json.loads(req.send().content)
+        entity = onedrivesdk.UploadSession(raw_response)
+
+        return entity
+
+    def cancel_upload_session(self, upload_url):
+        """
+        Cancel an upload session
+        :param upload_url: str
+        :return:
+        """
+        req = onedrivesdk.ItemRequestBuilder(upload_url, self.client)
+        return req.delete()
 
     def delta(self):
         """
@@ -152,6 +214,35 @@ class OneDriveUtil(object):
         self.token = items.token
 
         return items
+
+    @staticmethod
+    def _init_upload_session_header(first_range, data_len, total):
+        """
+        Init header items for upload session request
+        :param first_range: integer
+        :param data_len: integer
+        :param total: integer
+        :return: list
+        """
+        header_items = []
+        options = onedrivesdk.options
+
+        if first_range + data_len > total:
+            last_range = total - 1
+        else:
+            last_range = data_len - 1
+
+        range_item = dict(first=first_range, last=first_range + last_range)
+        content_range = {
+            'range': '%(first)s-%(last)s' % range_item,
+            'total': total
+        }
+        data_range = 'bytes %(range)s/%(total)s' % content_range
+
+        header_items.append(options.HeaderOption('Content-Range', data_range))
+        header_items.append(options.HeaderOption('Content-Length', data_len))
+
+        return header_items
 
     @staticmethod
     def _get_full_path(path):
