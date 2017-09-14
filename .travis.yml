@@ -21,3 +21,6 @@ matrix:
     - {<<: *PY, script: ['cd entities/python', 'tox -e pylint']}
     - {<<: *PY, script: ['cd entities/python', 'tox -e flake8']}
     - {<<: *PY, script: ['cd entities/python', 'tox -e pydocstyle']}
+    - {<<: *PY, script: ['cd entities/proto/plugins/python', 'tox -e pylint']}
+    - {<<: *PY, script: ['cd entities/proto/plugins/python', 'tox -e flake8']}
+    - {<<: *PY, script: ['cd entities/proto/plugins/python', 'tox -e pydocstyle']}
