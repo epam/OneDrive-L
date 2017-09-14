@@ -17,3 +17,7 @@ matrix:
     - {<<: *PY, script: ['cd synchronization_service', 'tox -e py36']}
     - {<<: *PY, script: ['cd synchronization_service', 'tox -e pylint']}
     - {<<: *PY, script: ['cd synchronization_service', 'tox -e flake8']}
+    - {<<: *PY, script: ['cd entities/python', 'tox -e py36']}
+    - {<<: *PY, script: ['cd entities/python', 'tox -e pylint']}
+    - {<<: *PY, script: ['cd entities/python', 'tox -e flake8']}
+    - {<<: *PY, script: ['cd entities/python', 'tox -e pydocstyle']}
