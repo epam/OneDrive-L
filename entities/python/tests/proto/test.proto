@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package tests.proto.test;
+
+
+message Bar {
+  uint32 eggs = 1;
+}
+
+
+enum CarManufacturer {
+  AUDI = 0;
+  MERCEDES = 1;
+  TOYOTA = 2;
+}
+
+
+message Foo {
+  message SubMessage {
+    sint32 sausages = 1;
+  }
+  enum SubEnum {
+    FOO = 0;
+    BAR = 1;
+  }
+
+  bytes foo = 1;
+  repeated string repeated_field = 2;
+  Bar composite_field = 3;
+  oneof test_oneof {
+    string bar = 4;
+    uint64 baz = 5;
+    Bar spam = 6;
+  }
+  SubMessage azerty = 7;
+  CarManufacturer manufacturer = 8;
+  SubEnum sub_enum_field = 9;
+}
