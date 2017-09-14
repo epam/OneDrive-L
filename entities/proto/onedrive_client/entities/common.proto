@@ -1,0 +1,48 @@
+/**
+ * Common entities.
+ *
+ * Contracts useful for the project in general.
+ */
+syntax = "proto3";
+
+package onedrive_client.entities.common;
+
+import "onedrive_client/entities/onedrive.proto";
+
+
+/**
+ * Metadata of a local item.
+ */
+message LocalItemMetadata {
+  uint64 size = 1;
+  uint64 modified = 2;
+}
+
+
+/**
+ * Local item - local file or directory.
+ */
+message LocalItem {
+  string path = 1;
+  LocalItemMetadata metadata = 2;
+}
+
+/**
+ * Changed local item.
+ */
+message DirtyLocalItem {
+  // Internal unique ID.
+  // When an item is synced it needs to invalidated and 'our_id' helps to
+  // identify the object.
+  bytes our_id = 1;
+  LocalItem item = 2;
+}
+
+/**
+ * Changed remote item.
+ */
+message DirtyRemoteItem {
+  // Serves the same purpose as in 'DirtyLocalItem'.
+  bytes our_id = 1;
+  onedrive_client.entities.onedrive.Item item = 2;
+}

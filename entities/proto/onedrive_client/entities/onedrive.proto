@@ -1,0 +1,95 @@
+/**
+ * Entities defined in OneDrive API: https://dev.onedrive.com/README.htm
+ *
+ * Contracts defined here mirror those that are used by OneDrive API 1-to-1.
+ * The only differences are:
+ *   - Only those fields that are useful for the project are declared.
+ *   - Some contracts like 'ConflictBehavior' are not "top-level"
+ *     OneDrive API entities, but they are still used and mentioned in the
+ *     API docs.
+ */
+syntax = "proto3";
+
+package onedrive_client.entities.onedrive;
+
+
+message BaseItem {
+  bytes id = 1;
+  bytes e_tag = 2;
+  bytes c_tag = 3;
+  uint64 last_modified_date_time = 4;
+  string name = 5;
+}
+
+
+enum DriveType {
+  PERSONAL = 0;
+  BUSINESS = 1;
+  DOCUMENT_LIBRARY = 2;
+}
+
+
+message Drive {
+  BaseItem base_item = 1;
+  DriveType drive_type = 2;
+}
+
+
+message FolderFacet {
+}
+
+
+message PackageFacet {
+}
+
+
+message DeletedFacet {
+}
+
+
+message HashesFacet {
+  bytes crc32_hash = 1;
+  bytes sha1_hash = 2;
+  bytes quick_xor_hash = 3;
+}
+
+
+message FileFacet {
+  HashesFacet hashes = 1;
+}
+
+
+message Item {
+  BaseItem base_item = 1;
+  uint64 size = 2;
+  FileFacet file = 3;
+  FolderFacet folder = 4;
+  PackageFacet package = 5;
+  DeletedFacet deleted = 6;
+}
+
+
+enum ConflictBehavior {
+  RENAME = 0;
+  REPLACE = 1;
+  FAIL = 2;
+}
+
+
+message ExpectedRange {
+  uint32 beginning = 1;
+  uint32 end = 2;
+}
+
+
+message UploadStatus {
+  uint64 expiration_date_time = 1;
+  repeated ExpectedRange next_expected_ranges = 2;
+}
+
+
+message UploadedFile {
+  bytes id = 1;
+  string name = 2;
+  uint64 size = 3;
+}
