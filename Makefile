@@ -17,3 +17,13 @@ entities-py-test-proto:
 		--python_out $(ENTITIES_DIR)/python/ \
 		--entities_out $(ENTITIES_DIR)/python/ \
 		$(wildcard $(ENTITIES_DIR)/python/tests/*.proto) $(wildcard $(ENTITIES_DIR)/python/tests/**/*.proto) $(wildcard $(ENTITIES_DIR)/python/tests/**/**/*.proto)
+
+# Entities: generate entity-classes for Python.
+.PHONY: entities-py-proto
+entities-py-proto:
+	$(PROTOC) \
+		--proto_path $(PROTOBUF_SRC)/src \
+		--proto_path $(ENTITIES_DIR)/proto/ \
+		--python_out $(ENTITIES_DIR)/python/src/ \
+		--entities_out=$(ENTITIES_DIR)/python/src/ \
+		$(wildcard $(ENTITIES_DIR)/proto/*.proto) $(wildcard $(ENTITIES_DIR)/proto/**/*.proto) $(wildcard $(ENTITIES_DIR)/proto/**/**/*.proto)
