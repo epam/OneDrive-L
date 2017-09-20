@@ -5,7 +5,7 @@ from .session import Session
 from .base_client import BaseOneDriveClient
 
 
-API_BASE_URL = "https://api.onedrive.com/v1.0/"
+API_BASE_URL = 'https://api.onedrive.com/v1.0/'
 
 
 class OneDriveClient(BaseOneDriveClient):
@@ -17,23 +17,25 @@ class OneDriveClient(BaseOneDriveClient):
         """
 
         self._config = config
-        client_id = config["auth"]["client_id"]
-        scopes = config["auth"]["scopes"]
+        client_id = config['auth']['client_id']
+        scopes = config['auth']['scopes']
 
         http_provider = onedrivesdk.HttpProvider()
-        auth_provider = onedrivesdk.AuthProvider(http_provider, client_id, scopes, session_type=Session)
+        auth_provider = onedrivesdk.AuthProvider(http_provider, client_id,
+                                                 scopes, session_type=Session)
 
         super().__init__(API_BASE_URL, auth_provider, http_provider)
 
-    def authenticate(self, client_secret=None, redirect_uri="http://localhost:8080/", auth_code=None):
+    def authenticate(self, client_secret=None,
+                     redirect_uri='http://localhost:8080/', auth_code=None):
         """ Authenticate process for OneDrive for personal use.
         """
 
-        client_secret = client_secret if client_secret is not None else self._config["auth"]["client_secret"]
+        if client_secret is None:
+            client_secret = self._config['auth']['client_secret']
 
         if self.check_saved_session_exists():
             self.auth_provider.load_session()
-
         else:
             if auth_code is None:
                 auth_url = self.auth_provider.get_auth_url(redirect_uri)
