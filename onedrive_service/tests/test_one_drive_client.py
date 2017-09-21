@@ -1,5 +1,10 @@
-import mock
+""" Test OneDriveClient functionality.
+"""
+# pylint: disable=no-self-use
+# pylint: disable=invalid-name
+
 import unittest
+import mock
 
 from onedrive_service.authentication.one_drive_client import OneDriveClient
 

@@ -1,3 +1,6 @@
+""" Base class for OneDrive clients.
+"""
+
 import os
 import onedrivesdk
 

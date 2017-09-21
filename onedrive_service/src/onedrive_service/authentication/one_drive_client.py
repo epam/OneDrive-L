@@ -1,8 +1,11 @@
+""" API client for OneDrive for personal use.
+"""
+
 import onedrivesdk
 from onedrivesdk.helpers import GetAuthCodeServer
 
-from .session import Session
 from .base_client import BaseOneDriveClient
+from .session import Session
 
 
 API_BASE_URL = 'https://api.onedrive.com/v1.0/'

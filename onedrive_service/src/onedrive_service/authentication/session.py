@@ -1,3 +1,6 @@
+""" Module contains OneDrive session representation.
+"""
+
 import os
 from onedrivesdk import session
 
