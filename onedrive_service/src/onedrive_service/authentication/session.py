@@ -1,5 +1,7 @@
 """ Module contains OneDrive session representation.
 """
+# pylint: disable=fixme
+# pylint: disable=useless-super-delegation
 
 import os
 
