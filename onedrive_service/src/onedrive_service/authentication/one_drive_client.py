@@ -42,7 +42,9 @@ class OneDriveClient(BaseOneDriveClient):
         else:
             if auth_code is None:
                 auth_url = self.auth_provider.get_auth_url(redirect_uri)
-                auth_code = GetAuthCodeServer.get_auth_code(auth_url, redirect_uri)
+                auth_code = GetAuthCodeServer.\
+                    get_auth_code(auth_url, redirect_uri)
 
-            self.auth_provider.authenticate(auth_code, redirect_uri, client_secret)
+            self.auth_provider.\
+                authenticate(auth_code, redirect_uri, client_secret)
             self.auth_provider.save_session()

@@ -4,6 +4,7 @@
 # pylint: disable=invalid-name
 
 import unittest
+
 import mock
 
 from onedrive_service.authentication.one_drive_client import OneDriveClient
@@ -17,11 +18,15 @@ class TestOneDriveClient(unittest.TestCase):
         """ Check 'load_session' is called in auth process if saved session exists.
         """
 
-        onedrive_client_module_path = 'onedrive_service.authentication.one_drive_client'
+        onedrive_client_module_path = 'onedrive_service.authentication.' \
+                                      'one_drive_client'
 
-        auth_provider_path = '{}.onedrivesdk.AuthProvider'.format(onedrive_client_module_path)
-        http_provider_path = '{}.onedrivesdk.HttpProvider'.format(onedrive_client_module_path)
-        check_session_method_name = '{}.OneDriveClient.check_saved_session_exists'\
+        auth_provider_path = '{}.onedrivesdk.AuthProvider'.\
+            format(onedrive_client_module_path)
+        http_provider_path = '{}.onedrivesdk.HttpProvider'.\
+            format(onedrive_client_module_path)
+        check_session_method_name = '{}.OneDriveClient.' \
+                                    'check_saved_session_exists'\
             .format(onedrive_client_module_path)
 
         test_config = {
@@ -42,16 +47,22 @@ class TestOneDriveClient(unittest.TestCase):
         client.auth_provider.get_auth_url.assert_not_called()
 
     def test_sending_auth_request_to_server(self):
-        """ Check 'get_auth_code' is called in auth process if saved session doesn't exist.
+        """ Check 'get_auth_code' is called in auth process
+        if saved session doesn't exist.
         """
 
-        onedrive_client_module_path = 'onedrive_service.authentication.one_drive_client'
+        onedrive_client_module_path = 'onedrive_service.' \
+                                      'authentication.one_drive_client'
 
-        auth_provider_path = '{}.onedrivesdk.AuthProvider'.format(onedrive_client_module_path)
-        http_provider_path = '{}.onedrivesdk.HttpProvider'.format(onedrive_client_module_path)
-        auth_helper_path = '{}.onedrivesdk.helpers.GetAuthCodeServer.get_auth_code'.\
+        auth_provider_path = '{}.onedrivesdk.AuthProvider'.\
             format(onedrive_client_module_path)
-        check_session_method_name = '{}.OneDriveClient.check_saved_session_exists'.\
+        http_provider_path = '{}.onedrivesdk.HttpProvider'.\
+            format(onedrive_client_module_path)
+        auth_helper_path = '{}.onedrivesdk.helpers.' \
+                           'GetAuthCodeServer.get_auth_code'.\
+            format(onedrive_client_module_path)
+        check_session_method_name = '{}.OneDriveClient.' \
+                                    'check_saved_session_exists'.\
             format(onedrive_client_module_path)
 
         test_config = {
