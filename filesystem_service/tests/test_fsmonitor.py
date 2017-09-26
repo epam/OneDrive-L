@@ -7,8 +7,8 @@ import os
 import unittest
 
 from .utils.consts import EXCLUDE_FOLDER, FOLDER, TEST_FILE, TEST_SUBDIR
-from .utils.monitor import EVENTS, gen_event_object, gen_events_list,\
-    get_monitor_instance, Subscriber
+from .utils.monitor import EVENTS, gen_event_object, gen_events_list, \
+    get_monitor_instance, SecondSubscriber, SEVENTS, Subscriber
 
 
 class FileSystemMonitorTest(unittest.TestCase):
@@ -130,14 +130,26 @@ class MonitorTest(unittest.TestCase):
     def setUpClass(cls):
         if not os.path.exists(FOLDER):
             os.mkdir(FOLDER)
-        gen_events_list(get_monitor_instance(FOLDER, Subscriber()))
+        gen_events_list(get_monitor_instance(FOLDER, [Subscriber(),
+                                                      SecondSubscriber()]))
 
     def test_empty_events(self):
         """
         Check if events list is not empty
         """
 
-        self.assertTrue(EVENTS, 'List of events is empty')
+        self.assertTrue(EVENTS, 'List of events is empty for the '
+                                'first subscriber')
+        self.assertTrue(SEVENTS, 'List of events is empty for the '
+                                 'second subscriber')
+
+    def test_event_lists(self):
+        """
+        Check if event lists are equal between subscribers
+        """
+
+        self.assertFalse(list(set(EVENTS) & set(SEVENTS)),
+                         'List of events for subscribers are not equal')
 
     def test_event_create(self):
         """

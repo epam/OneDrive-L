@@ -15,6 +15,7 @@ from .consts import SUBDIR_FPATH, SUBDIR_PATH
 InotifyEvent = collections.namedtuple('_INOTIFY_EVENT',
                                       ['wd', 'mask', 'cookie', 'len'])
 EVENTS = Manager().list()
+SEVENTS = Manager().list()
 
 
 # pylint: disable=too-few-public-methods
@@ -33,15 +34,31 @@ class Subscriber(object):
         EVENTS.append(event)
 
 
-def get_monitor_instance(folder='/test', subscriber=None):
+class SecondSubscriber(object):
+    """
+    Subscriber emulator
+    """
+
+    @staticmethod
+    def update(event):
+        """
+        :param event: inotify event
+        add events to shared list variable
+        """
+
+        SEVENTS.append(event)
+
+
+# pylint: disable=dangerous-default-value
+def get_monitor_instance(folder='/test', subscribers=[]):
     """
     :param folder: folder to be watched
-    :param subscriber: an instance of subscriber
+    :param subscribers: list of subscriber instances
     :return: an instance of FileSystemMonitor
     """
 
     monitor = FileSystemMonitor(folder)
-    if subscriber:
+    for subscriber in subscribers:
         monitor.subscribe(subscriber)
 
     return monitor
