@@ -1,0 +1,2 @@
+""" Init module for authentication.
+"""
