@@ -3,13 +3,12 @@ Module with unittests for the filesystem monitor
 """
 # pylint: disable=protected-access
 
-import collections
+import os
 import unittest
 
-from filesystem_service import monitor
-
-InotifyEvent = collections.namedtuple('_INOTIFY_EVENT',
-                                      ['wd', 'mask', 'cookie', 'len'])
+from .utils.consts import EXCLUDE_FOLDER, FOLDER, TEST_FILE, TEST_SUBDIR
+from .utils.monitor import EVENTS, gen_event_object, gen_events_list, \
+    get_monitor_instance, SecondSubscriber, SEVENTS, Subscriber
 
 
 class FileSystemMonitorTest(unittest.TestCase):
@@ -22,14 +21,16 @@ class FileSystemMonitorTest(unittest.TestCase):
         Create instance of a monitor
         """
 
-        self.monitor = monitor.FileSystemMonitor(folder='/test_dir')
+        self.monitor = get_monitor_instance()
+        self.sub1 = Subscriber()
+        self.sub2 = Subscriber()
 
     def test_add_subscriber(self):
         """
         Add subscriber to the list of subscribers. Check if it's not empty.
         """
 
-        self.monitor.subscribe('subscriber')
+        self.monitor.subscribe(self.sub1)
         self.assertTrue(self.monitor.subscribers,
                         'List of subscriber is empty')
 
@@ -39,9 +40,20 @@ class FileSystemMonitorTest(unittest.TestCase):
         subscribers is correct.
         """
 
-        self.monitor.subscribe('subscriber1')
-        self.monitor.subscribe('subscriber2')
+        self.monitor.subscribe(self.sub1)
+        self.monitor.subscribe(self.sub2)
         self.assertEqual(len(self.monitor.subscribers), 2,
+                         'Wrong number of subscribers')
+
+    def test_add_identical_subscribers(self):
+        """
+        Add two subscribers to the list of subscribers. Check if number of
+        subscribers is correct.
+        """
+
+        self.monitor.subscribe(self.sub1)
+        self.monitor.subscribe(self.sub1)
+        self.assertEqual(len(self.monitor.subscribers), 1,
                          'Wrong number of subscribers')
 
     def test_remove_subscriber(self):
@@ -49,8 +61,8 @@ class FileSystemMonitorTest(unittest.TestCase):
         Add, remove subscriber. Verify that the list of subscribers is empty.
         """
 
-        self.monitor.subscribe('subscriber')
-        self.monitor.unsubscribe('subscriber')
+        self.monitor.subscribe(self.sub1)
+        self.monitor.unsubscribe(self.sub1)
         self.assertFalse(self.monitor.subscribers,
                          'List of subscriber is not empty')
 
@@ -60,7 +72,7 @@ class FileSystemMonitorTest(unittest.TestCase):
         contains valid folder.
         """
 
-        self.monitor.add_exclude_folder('/test_dir/exclude')
+        self.monitor.add_exclude_folder(EXCLUDE_FOLDER)
         self.assertTrue(self.monitor._exclude_folders,
                         'List of excludes is empty')
 
@@ -68,14 +80,14 @@ class FileSystemMonitorTest(unittest.TestCase):
                          'Lack of excludes in exclude list')
 
         self.assertEqual(list(self.monitor._exclude_folders)[0],
-                         b'/test_dir/exclude',)
+                         EXCLUDE_FOLDER.encode(),)
 
     def test_add_folder(self):
         """
         Add a folder for monitoring. Verify that the folder is correctly set.
         """
 
-        self.assertEqual(b'/test_dir', self.monitor._root_folder)
+        self.assertEqual(b'/test', self.monitor._root_folder)
 
 
 class EventTest(unittest.TestCase):
@@ -85,10 +97,7 @@ class EventTest(unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         super(EventTest, self).__init__(*args, **kwargs)
-        self.i_event = (InotifyEvent(wd=1, mask=8, cookie=0, len=16),
-                        ['IN_CLOSE_WRITE', 'IN_ACCESS'], b'/tmp/onedrive',
-                        b'test')
-        self.event = monitor.Event(self.i_event)
+        self.event = gen_event_object()
 
     def test_event_hasattrs(self):
         """
@@ -110,3 +119,70 @@ class EventTest(unittest.TestCase):
                          'Wrong attribute value')
 
         self.assertEqual(self.event.filename, 'test', 'Wrong attribute value')
+
+
+class MonitorTest(unittest.TestCase):
+    """
+    Tests for the filesystem event's monitoring functionality
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        if not os.path.exists(FOLDER):
+            os.mkdir(FOLDER)
+        gen_events_list(get_monitor_instance(FOLDER, [Subscriber(),
+                                                      SecondSubscriber()]))
+
+    def test_empty_events(self):
+        """
+        Check if events list is not empty
+        """
+
+        self.assertTrue(EVENTS, 'List of events is empty for the '
+                                'first subscriber')
+        self.assertTrue(SEVENTS, 'List of events is empty for the '
+                                 'second subscriber')
+
+    def test_event_lists(self):
+        """
+        Check if event lists are equal between subscribers
+        """
+
+        self.assertFalse(list(set(EVENTS) & set(SEVENTS)),
+                         'List of events for subscribers are not equal')
+
+    def test_event_create(self):
+        """
+        Test create events
+        """
+
+        create_events = []
+        for event in EVENTS:
+            if hasattr(event, 'IN_CREATE'):
+                create_events.append(event)
+
+        self.assertTrue(create_events, 'Create events were not found')
+
+        files_created = [event.filename for event in create_events]
+        self.assertEqual(len(files_created), 2,
+                         'Wrong number of create events')
+        self.assertTrue(TEST_SUBDIR in files_created,
+                        'Create event for {} is missing'.format(TEST_SUBDIR))
+        self.assertTrue(TEST_FILE in files_created,
+                        'Create event for {} is missing'.format(TEST_FILE))
+
+    def test_event_delete(self):
+        """
+        Test delete events
+        """
+
+        delete_event = None
+        for event in EVENTS:
+            if hasattr(event, 'IN_DELETE') and event.filename == TEST_SUBDIR:
+                delete_event = event
+                break
+
+        self.assertIsNotNone(delete_event, 'Delete events were not found')
+
+        self.assertEqual(delete_event.filename, TEST_SUBDIR,
+                         'Delete event for {} is missing'.format(TEST_SUBDIR))

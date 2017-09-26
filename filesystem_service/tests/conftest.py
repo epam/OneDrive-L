@@ -1,1 +1,3 @@
-"""Tests configuration."""
+"""
+Tests configuration and common fixtures
+"""
