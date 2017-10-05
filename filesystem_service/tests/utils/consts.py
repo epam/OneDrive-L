@@ -10,4 +10,5 @@ EXCLUDE_FOLDER = os.path.join(FOLDER, 'exclude')
 TEST_FILE = 'testfile'
 TEST_SUBDIR = 'subdir'
 SUBDIR_PATH = os.path.join(FOLDER, TEST_SUBDIR)
+SUBDIR_COPY_PATH = os.path.join(FOLDER, 'subdir_copy')
 SUBDIR_FPATH = os.path.join(SUBDIR_PATH, TEST_FILE)

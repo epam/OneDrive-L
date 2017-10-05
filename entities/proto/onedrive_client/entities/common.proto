@@ -16,6 +16,8 @@ import "onedrive_client/entities/onedrive.proto";
 message LocalItemMetadata {
   uint64 size = 1;
   uint64 modified = 2;
+  bool is_dir = 3;
+  bool is_deleted = 4;
 }
 
 

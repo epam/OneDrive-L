@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='onedrive_client/entities/common.proto',
   package='onedrive_client.entities.common',
   syntax='proto3',
-  serialized_pb=_b('\n%onedrive_client/entities/common.proto\x12\x1fonedrive_client.entities.common\x1a\'onedrive_client/entities/onedrive.proto\"3\n\x11LocalItemMetadata\x12\x0c\n\x04size\x18\x01 \x01(\x04\x12\x10\n\x08modified\x18\x02 \x01(\x04\"_\n\tLocalItem\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x44\n\x08metadata\x18\x02 \x01(\x0b\x32\x32.onedrive_client.entities.common.LocalItemMetadata\"Z\n\x0e\x44irtyLocalItem\x12\x0e\n\x06our_id\x18\x01 \x01(\x0c\x12\x38\n\x04item\x18\x02 \x01(\x0b\x32*.onedrive_client.entities.common.LocalItem\"X\n\x0f\x44irtyRemoteItem\x12\x0e\n\x06our_id\x18\x01 \x01(\x0c\x12\x35\n\x04item\x18\x02 \x01(\x0b\x32\'.onedrive_client.entities.onedrive.Itemb\x06proto3')
+  serialized_pb=_b('\n%onedrive_client/entities/common.proto\x12\x1fonedrive_client.entities.common\x1a\'onedrive_client/entities/onedrive.proto\"W\n\x11LocalItemMetadata\x12\x0c\n\x04size\x18\x01 \x01(\x04\x12\x10\n\x08modified\x18\x02 \x01(\x04\x12\x0e\n\x06is_dir\x18\x03 \x01(\x08\x12\x12\n\nis_deleted\x18\x04 \x01(\x08\"_\n\tLocalItem\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x44\n\x08metadata\x18\x02 \x01(\x0b\x32\x32.onedrive_client.entities.common.LocalItemMetadata\"Z\n\x0e\x44irtyLocalItem\x12\x0e\n\x06our_id\x18\x01 \x01(\x0c\x12\x38\n\x04item\x18\x02 \x01(\x0b\x32*.onedrive_client.entities.common.LocalItem\"X\n\x0f\x44irtyRemoteItem\x12\x0e\n\x06our_id\x18\x01 \x01(\x0c\x12\x35\n\x04item\x18\x02 \x01(\x0b\x32\'.onedrive_client.entities.onedrive.Itemb\x06proto3')
   ,
   dependencies=[onedrive__client_dot_entities_dot_onedrive__pb2.DESCRIPTOR,])
 
@@ -48,6 +48,20 @@ _LOCALITEMMETADATA = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='is_dir', full_name='onedrive_client.entities.common.LocalItemMetadata.is_dir', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='is_deleted', full_name='onedrive_client.entities.common.LocalItemMetadata.is_deleted', index=3,
+      number=4, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -61,7 +75,7 @@ _LOCALITEMMETADATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=115,
-  serialized_end=166,
+  serialized_end=202,
 )
 
 
@@ -98,8 +112,8 @@ _LOCALITEM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=168,
-  serialized_end=263,
+  serialized_start=204,
+  serialized_end=299,
 )
 
 
@@ -136,8 +150,8 @@ _DIRTYLOCALITEM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=265,
-  serialized_end=355,
+  serialized_start=301,
+  serialized_end=391,
 )
 
 
@@ -174,8 +188,8 @@ _DIRTYREMOTEITEM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=357,
-  serialized_end=445,
+  serialized_start=393,
+  serialized_end=481,
 )
 
 _LOCALITEM.fields_by_name['metadata'].message_type = _LOCALITEMMETADATA
