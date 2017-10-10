@@ -165,11 +165,14 @@ class Entity(collections.abc.MutableMapping, metaclass=_EntityMeta):
 
     Complex fields are automatically converted to instances of
     the corresponding entity-classes:
-    >>> local_item['metadata'] = {'size': 999, 'modified': 123456789}
+    >>> local_item['metadata'] = {'size': 999, 'modified': 123456789,\
+                                  'is_dir': True}
     >>> local_item
     LocalItem({'path': '/bar',
                'metadata': LocalItemMetadata({'size': 999,
-                                              'modified': 123456789})})
+                                              'modified': 123456789,
+                                              'is_dir': True,
+                                              'is_deleted': False})})
 
     Repeated fields. Notice repeated fields are set by default unlike
     complex fields. It's because it's Protobuf specs:

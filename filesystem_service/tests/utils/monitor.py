@@ -3,35 +3,33 @@ Provides useful functions for filesystem monitor tests
 """
 
 import collections
-from multiprocessing import Manager, Process
-import os
+from multiprocessing import Process
 from time import sleep
 
 from filesystem_service.monitor import Event, FileSystemMonitor
 
-from .consts import SUBDIR_FPATH, SUBDIR_PATH
-
 
 InotifyEvent = collections.namedtuple('_INOTIFY_EVENT',
                                       ['wd', 'mask', 'cookie', 'len'])
-EVENTS = Manager().list()
-SEVENTS = Manager().list()
 
 
+# pylint: disable=dangerous-default-value
 # pylint: disable=too-few-public-methods
 class Subscriber(object):
     """
     Subscriber emulator
     """
 
-    @staticmethod
-    def update(event):
+    def __init__(self, events=[]):
+        self.events = events
+
+    def update(self, event):
         """
         :param event: inotify event
         add events to shared list variable
         """
 
-        EVENTS.append(event)
+        self.events.append(event)
 
 
 class SecondSubscriber(object):
@@ -39,17 +37,18 @@ class SecondSubscriber(object):
     Subscriber emulator
     """
 
-    @staticmethod
-    def update(event):
+    def __init__(self, events=[]):
+        self.events = events
+
+    def update(self, event):
         """
         :param event: inotify event
         add events to shared list variable
         """
 
-        SEVENTS.append(event)
+        self.events.append(event)
 
 
-# pylint: disable=dangerous-default-value
 def get_monitor_instance(folder='/test', subscribers=[]):
     """
     :param folder: folder to be watched
@@ -87,21 +86,3 @@ def start_monitor_process(monitor):
     sleep(0.1)
 
     return process
-
-
-def gen_events_list(monitor):
-    """
-    :param monitor: an instance of monitor
-    Fills shared variable with events
-    """
-
-    process = start_monitor_process(monitor)
-    os.system('mkdir -p {}'.format(SUBDIR_PATH))
-    sleep(1)
-    os.system('touch {}'.format(SUBDIR_FPATH))
-    sleep(1)
-    os.system('cat {}'.format(SUBDIR_FPATH))
-    sleep(1)
-    os.system('rm -rf {}'.format(SUBDIR_PATH))
-    sleep(1)
-    process.terminate()
