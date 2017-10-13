@@ -4,3 +4,5 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
+py==1.4.34                # via pytest
+pytest==3.2.3
