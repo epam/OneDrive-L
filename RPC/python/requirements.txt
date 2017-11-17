@@ -4,6 +4,7 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
+antlr4-python3-runtime==4.7
 gevent==1.2.2
 greenlet==0.4.12          # via gevent
 logbook==1.1.0

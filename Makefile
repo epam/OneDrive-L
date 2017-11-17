@@ -1,7 +1,9 @@
 PROTOC = protoc
+ANTLR4 := antlr4
 CWD := $(shell pwd)
 PROTOBUF_SRC := $(CWD)/protobuf
 ENTITIES_DIR := $(CWD)/entities
+RPC_DIR := $(CWD)/RPC
 
 # Entities Protobuf definitions generation.
 # Assumes that Entities Protoc-plugin is installed.
@@ -27,3 +29,10 @@ entities-py-proto:
 		--python_out $(ENTITIES_DIR)/python/src/ \
 		--entities_out=$(ENTITIES_DIR)/python/src/ \
 		$(wildcard $(ENTITIES_DIR)/proto/*.proto) $(wildcard $(ENTITIES_DIR)/proto/**/*.proto) $(wildcard $(ENTITIES_DIR)/proto/**/**/*.proto)
+
+RPC-py-expressions-parser:
+	$(ANTLR4) \
+		-visitor \
+		-Dlanguage=Python3 \
+		-o $(RPC_DIR)/python/src/onedrive_client/RPC/expressions/parser/ \
+		$(RPC_DIR)/Expressions.g4
