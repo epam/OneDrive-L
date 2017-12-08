@@ -20,6 +20,16 @@ from . import ${PB_MODULE}
 # pylint: disable=abstract-method
 
 
+__all__ = [
+% for message_descriptor in FILE_DESCRIPTOR.message_type:
+    '${message_descriptor.name}',
+% endfor
+% for enum_descriptor in FILE_DESCRIPTOR.enum_type:
+    '${enum_value_descriptor.name}',
+% endfor
+]
+
+
 # Messages
 % for message_descriptor in FILE_DESCRIPTOR.message_type:
 % if not loop.first:
