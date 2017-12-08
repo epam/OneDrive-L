@@ -15,6 +15,7 @@ class TransportError(Exception):
 
 
 class Closed(TransportError):
+    """Transport is closed."""
     pass
 
 

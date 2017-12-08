@@ -109,7 +109,10 @@ class Transport(Generic[Address], metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def on_receive(self, callback: Callable[[str, bytes], None]):
+    def on_receive(
+        self,
+        callback: Callable[[str, bytes], None],
+    ):
         """Register a 'callback' to be called when data is received.
 
         The 'callback' is called with two positional arguments: the sender

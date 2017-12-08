@@ -64,6 +64,7 @@ class TCPTransport(Transport):
         self,
         socket: gevent.socket.socket
     ) -> gevent.lock.RLock:
+        """Returns lock associated with the 'socket'."""
         return self.__socket_locks.setdefault(socket, gevent.lock.RLock())
 
     @property
@@ -98,12 +99,16 @@ class TCPTransport(Transport):
             while True:
                 message = self.__extract_message(buffer)
                 if message is not None:
+                    LOGGER.trace('Got message from {}...', identity)
                     # pylint: disable=broad-except
-                    try:
-                        for callback in self.__receive_callbacks:
+                    callbacks = self.__receive_callbacks,
+                    i = 0
+                    for i, callback in enumerate(callbacks, start=1):
+                        try:
                             callback(identity, message)
-                    except Exception:
-                        pass
+                        except Exception as exc:
+                            LOGGER.exception(exc)
+                    LOGGER.trace('Executed {} callbacks.', i)
                 else:
                     break
 
@@ -150,9 +155,7 @@ class TCPTransport(Transport):
         identity: str,
         socketref: weakref.ReferenceType
     ):
-        """Watches a socket for readiness to be read and triggers message
-        reading and parsing.
-        """
+        """Continuously read and parse messages from the socket."""
         # pylint: disable=protected-access
         while True:
             transport = transportref()
@@ -214,6 +217,7 @@ class TCPTransport(Transport):
         identity: str,
         socket: gevent.socket.socket
     ) -> None:
+        """Terminate connection."""
         LOGGER.trace(
             'Closing connection with "{}".',
             identity
@@ -230,7 +234,7 @@ class TCPTransport(Transport):
 
     @staticmethod
     def __make_identity(address):
-        """Make an identity from `address`."""
+        """Make an identity from 'address'."""
         return ':'.join(map(str, address))
 
     @staticmethod
@@ -292,7 +296,13 @@ class TCPTransport(Transport):
         block: bool = True,
         timeout: Optional[float] = None
     ) -> Optional[List[str]]:
-        """Send a message to a remote peer."""
+        """Send a message to a remote peer.
+
+        Parameters
+        ----------
+        data
+            Arbitrary byt
+        """
         LOGGER.trace(
             'Sending to {}...', ', '.join('"' + i + '"' for i in identities)
         )
@@ -467,5 +477,5 @@ class TCPTransport(Transport):
             None
         ]
     ):
-        """Set a callback that will be executed when a disconnect happens."""
+        """Add a callback that will be executed when a disconnect happens."""
         self.__on_connection_lost_callbacks.append(callback)

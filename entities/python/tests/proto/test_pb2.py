@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='tests/proto/test.proto',
   package='tests.proto.test',
   syntax='proto3',
-  serialized_pb=_b('\n\x16tests/proto/test.proto\x12\x10tests.proto.test\"\x13\n\x03\x42\x61r\x12\x0c\n\x04\x65ggs\x18\x01 \x01(\r\"\x8c\x03\n\x03\x46oo\x12\x0b\n\x03\x66oo\x18\x01 \x01(\x0c\x12\x16\n\x0erepeated_field\x18\x02 \x03(\t\x12.\n\x0f\x63omposite_field\x18\x03 \x01(\x0b\x32\x15.tests.proto.test.Bar\x12\r\n\x03\x62\x61r\x18\x04 \x01(\tH\x00\x12\r\n\x03\x62\x61z\x18\x05 \x01(\x04H\x00\x12%\n\x04spam\x18\x06 \x01(\x0b\x32\x15.tests.proto.test.BarH\x00\x12\x30\n\x06\x61zerty\x18\x07 \x01(\x0b\x32 .tests.proto.test.Foo.SubMessage\x12\x37\n\x0cmanufacturer\x18\x08 \x01(\x0e\x32!.tests.proto.test.CarManufacturer\x12\x35\n\x0esub_enum_field\x18\t \x01(\x0e\x32\x1d.tests.proto.test.Foo.SubEnum\x1a\x1e\n\nSubMessage\x12\x10\n\x08sausages\x18\x01 \x01(\x11\"\x1b\n\x07SubEnum\x12\x07\n\x03\x46OO\x10\x00\x12\x07\n\x03\x42\x41R\x10\x01\x42\x0c\n\ntest_oneof*5\n\x0f\x43\x61rManufacturer\x12\x08\n\x04\x41UDI\x10\x00\x12\x0c\n\x08MERCEDES\x10\x01\x12\n\n\x06TOYOTA\x10\x02\x62\x06proto3')
+  serialized_pb=_b('\n\x16tests/proto/test.proto\x12\x10tests.proto.test\"\x13\n\x03\x42\x61r\x12\x0c\n\x04\x65ggs\x18\x01 \x01(\r\"\xc5\x03\n\x03\x46oo\x12\x0b\n\x03\x66oo\x18\x01 \x01(\x0c\x12\x16\n\x0erepeated_field\x18\x02 \x03(\t\x12.\n\x0f\x63omposite_field\x18\x03 \x01(\x0b\x32\x15.tests.proto.test.Bar\x12\r\n\x03\x62\x61r\x18\x04 \x01(\tH\x00\x12\r\n\x03\x62\x61z\x18\x05 \x01(\x04H\x00\x12%\n\x04spam\x18\x06 \x01(\x0b\x32\x15.tests.proto.test.BarH\x00\x12\x30\n\x06\x61zerty\x18\x07 \x01(\x0b\x32 .tests.proto.test.Foo.SubMessage\x12\x37\n\x0cmanufacturer\x18\x08 \x01(\x0e\x32!.tests.proto.test.CarManufacturer\x12\x35\n\x0esub_enum_field\x18\t \x01(\x0e\x32\x1d.tests.proto.test.Foo.SubEnum\x12\x37\n\x18repeated_composite_field\x18\n \x03(\x0b\x32\x15.tests.proto.test.Bar\x1a\x1e\n\nSubMessage\x12\x10\n\x08sausages\x18\x01 \x01(\x11\"\x1b\n\x07SubEnum\x12\x07\n\x03\x46OO\x10\x00\x12\x07\n\x03\x42\x41R\x10\x01\x42\x0c\n\ntest_oneof*5\n\x0f\x43\x61rManufacturer\x12\x08\n\x04\x41UDI\x10\x00\x12\x0c\n\x08MERCEDES\x10\x01\x12\n\n\x06TOYOTA\x10\x02\x62\x06proto3')
 )
 
 _CARMANUFACTURER = _descriptor.EnumDescriptor(
@@ -44,8 +44,8 @@ _CARMANUFACTURER = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=464,
-  serialized_end=517,
+  serialized_start=521,
+  serialized_end=574,
 )
 _sym_db.RegisterEnumDescriptor(_CARMANUFACTURER)
 
@@ -72,8 +72,8 @@ _FOO_SUBENUM = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=421,
-  serialized_end=448,
+  serialized_start=478,
+  serialized_end=505,
 )
 _sym_db.RegisterEnumDescriptor(_FOO_SUBENUM)
 
@@ -135,8 +135,8 @@ _FOO_SUBMESSAGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=389,
-  serialized_end=419,
+  serialized_start=446,
+  serialized_end=476,
 )
 
 _FOO = _descriptor.Descriptor(
@@ -209,6 +209,13 @@ _FOO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='repeated_composite_field', full_name='tests.proto.test.Foo.repeated_composite_field', index=9,
+      number=10, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -226,7 +233,7 @@ _FOO = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=66,
-  serialized_end=462,
+  serialized_end=519,
 )
 
 _FOO_SUBMESSAGE.containing_type = _FOO
@@ -235,6 +242,7 @@ _FOO.fields_by_name['spam'].message_type = _BAR
 _FOO.fields_by_name['azerty'].message_type = _FOO_SUBMESSAGE
 _FOO.fields_by_name['manufacturer'].enum_type = _CARMANUFACTURER
 _FOO.fields_by_name['sub_enum_field'].enum_type = _FOO_SUBENUM
+_FOO.fields_by_name['repeated_composite_field'].message_type = _BAR
 _FOO_SUBENUM.containing_type = _FOO
 _FOO.oneofs_by_name['test_oneof'].fields.append(
   _FOO.fields_by_name['bar'])

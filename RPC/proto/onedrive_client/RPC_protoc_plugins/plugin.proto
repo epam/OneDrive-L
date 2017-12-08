@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+package onedrive_client.RPC.plugin;
+
+import "onedrive_client/RPC/RPC.proto";
+import public "google/protobuf/compiler/plugin.proto";

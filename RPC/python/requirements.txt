@@ -5,6 +5,10 @@
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
 antlr4-python3-runtime==4.7
+expiringdict==1.1.4
 gevent==1.2.2
 greenlet==0.4.12          # via gevent
 logbook==1.1.0
+mmh3==2.5.1
+protobuf==3.5.0.post1
+six==1.11.0               # via protobuf
