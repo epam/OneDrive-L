@@ -35,4 +35,5 @@ message Foo {
   SubMessage azerty = 7;
   CarManufacturer manufacturer = 8;
   SubEnum sub_enum_field = 9;
+  repeated Bar repeated_composite_field = 10;
 }

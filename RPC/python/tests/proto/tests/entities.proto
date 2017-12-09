@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package tests.entities;
+
+import "onedrive_client/RPC/RPC.proto";
+
+message Foo {
+  string data = 1;
+}

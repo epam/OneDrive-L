@@ -2,11 +2,13 @@
 import pytest
 
 from tests.proto.test import Bar, Foo
+from tests.proto.test_pb2 import Bar as PBBar, Foo as PBFoo
 # pylint: disable=blacklisted-name,no-self-use
 
 
 class TestEntity:
     """Tests for ``Entity`` class."""
+    # pylint: disable=no-member
 
     @pytest.fixture
     def foo(self):
@@ -85,7 +87,7 @@ class TestEntity:
 
             assert foo['repeated_field'] == expected_value
 
-        @pytest.mark.parametrize('value', [0, ['test'], {0: 1}, b'test'])
+        @pytest.mark.parametrize('value', [0, ['test'], {0: 1}, True])
         def test_append_value_of_wrong_type_to_repeated_field_fails(
             self,
             foo: Foo,
@@ -159,3 +161,48 @@ class TestEntity:
         """Assignment to a non-existent field fails."""
         with pytest.raises(TypeError):
             foo['not_exists'] = 0
+
+    def test_from_protobuf_message(self):
+        """It's possible to construct an entity from a Protobuf message."""
+        pb_foo = PBFoo()
+        pb_foo.spam.eggs = 123
+        pb_foo.repeated_field.extend(['a', 'b', 'c'])
+        pb_foo.foo = b'abc'
+
+        pb_bar_1 = PBBar()
+        pb_bar_1.eggs = 1
+        pb_bar_2 = PBBar()
+        pb_bar_2.eggs = 2
+        pb_bar_3 = PBBar()
+        pb_bar_3.eggs = 3
+
+        pb_foo.repeated_composite_field.extend([
+            pb_bar_1,
+            pb_bar_2,
+            pb_bar_3
+        ])
+        foo = Foo.from_protobuf_message(pb_foo)
+
+        assert foo['spam']['eggs'] == pb_foo.spam.eggs
+        assert foo['repeated_field'] == pb_foo.repeated_field
+        assert foo['repeated_composite_field'] == [
+            {'eggs': e.eggs} for e in pb_foo.repeated_composite_field
+        ]
+        assert foo['foo'] == pb_foo.foo
+
+    def test_to_protobuf_message(self, foo):
+        """It's possible to convert an entity to a Protobuf message."""
+        foo['spam'] = {'eggs': 123}
+        foo['repeated_field'].extend(['a', 'b', 'c'])
+        foo['repeated_composite_field'].extend([
+            {'eggs': 1}, {'eggs': 2}, {'eggs': 3}
+        ])
+        foo['foo'] = b'abc'
+
+        pb_foo = foo.to_protobuf_message()
+
+        assert pb_foo.spam.eggs == foo['spam']['eggs']
+        assert pb_foo.repeated_field == foo['repeated_field']
+        assert ([{'eggs': e.eggs} for e in pb_foo.repeated_composite_field] ==
+                foo['repeated_composite_field'])
+        assert pb_foo.foo == foo['foo']

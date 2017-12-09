@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package tests.service;
+
+import "onedrive_client/RPC/RPC.proto";
+import "tests/entities.proto";
+import "google/protobuf/empty.proto";
+
+option py_generic_services = true;
+
+service SpamService {
+  option (onedrive_client.RPC.service_id) = 1;
+
+  rpc Bar(tests.entities.Foo) returns (google.protobuf.Empty) {
+    option (onedrive_client.RPC.method_id) = 1;
+    option (onedrive_client.RPC.model_id) = 'REQUEST_RESPONSE';
+  }
+}

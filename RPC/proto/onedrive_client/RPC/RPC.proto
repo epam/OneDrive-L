@@ -1,0 +1,662 @@
+/*
+
+=============================
+OneDrive Client RPC subsystem
+=============================
+
+.. contents:: Table of Contents
+
+Features
+========
+1. Automatic detection of disconnected/hung peers.
+   So users don't need to implement heartbeats or message acknowledgement
+   mechanisms themselves (unlike ZeroMQ).
+   Heartbeats and acknowledgement are optional features and whether
+   they are used entirely depends on how the communication model is defined.
+   So, for example, in case if user needs fast one-way messaging and is
+   not concerned about guaranteed delivery they could be just not used in
+   the communication model definition.
+2. High-level.
+   Provides many high-level communication models like publish-subscribe,
+   request-response, command, etc.
+   None of the communication model's logic is hardcoded, communication models
+   are an extension point of the RPC system - they are defined in
+   platform-independent DSL. New communication models could be added without
+   modifying code in the target programming language.
+3. Reliable.
+   The protocol supports optional ACK-based message delivery tracking as
+   well as non-optional duplicate packet detection using a sliding-window-style
+   alghorithm.
+4. Transport agnostic.
+   Doesn't depend on any specific transport protocol. TCP, UDP, Unix-sockets,
+   pipes could be used.
+5. Language independent.
+   Relies on Protobuf and language-independent definitions of communications
+   models.
+6. Multiplexing.
+   Supports multiple logical communication sessions (potentially of different
+   type and duration) over a single transport layer connection.
+7. Asynchronous by default.
+
+Architecture overview
+=====================
+The architecture consists of three layers:
+
+  - Transport layer - consistently delivers byte sequences.
+  - Peer layer - handles high-level communication models' logic.
+  - Facade layer - provides auto-generation of serivce implementations
+    based on declarations of services in IDL. Contains mostly plumbing and
+    none of important logic.
+
+Transport layer
+===============
+Provides basic means for process-to-process (or peer-to-peer) communication.
+
+Key properties:
+
+- MUST provide guarantee of delivery of data without corruption.
+- MUST be capable to establish connections to unlimited number of peers and
+  provide a public API for it.
+- MUST be able to listen for coming data to a single address and provice
+  a public API for it.
+- It MUST possible to listen for inbound connections and connect to peers
+  simultaneously.
+- SHOULD NOT enforce datagram delivery order.
+- SHOULD NOT be responsible for handling of lost datagrams.
+
+Transport protocol could use different communication channels. TCP, UDP,
+Unix-sockets, pipes could be used as communication channels and transmission
+alghorithm could be different for each of them. At the same time
+implementations of the transport protocol over different communication
+channels must have the same interface and have the same properties as defined
+above.
+
+TCP transport
+~~~~~~~~~~~~~
+Sends datagrams_ over TCP connections with payload size encoded
+in the header.
+
+Datagram structure:
+
+MSB                                 LSB
++---------+---------------------------+
+| Header  | Payload                   |
++---------+---------------------------+
+| 4 bytes | As defined in the header. |
++---------+---------------------------+
+
+.. _datagrams: datagram_
+
+Peer layer
+==========
+Encapsulates high-level inter-process communication.
+
+This is the most complex and important layer of the RPC protocol.
+The central concepts of this layer are Session_, Model_ and Endpoint_.
+
+.. _Session: session_
+.. _Model: model_
+.. _Endpoint: endpoint_
+
+In a few words
+~~~~~~~~~~~~~~
+Peers_ manage logical communication connections called sessions_  which could
+follow different `communication models`_ defined as finite state machines.
+Models are essentially plugins that implement different communication patterns
+like request-response or publish-subscribe. No communication logic is
+"hardcoded".
+
+Peers_ pass messages between each other and internally feed them to
+appropriate endpoints_ which are in turn transition internal state machines
+defined by the models_.
+
+Endpoints_ work as interpretators or virtual machines that execute programs
+defined by the models-state-machines - they provide events as inputs and the
+state machines generate actions and transition themselves to new states and
+the endpoints in turn execute the actions. The events and the actions both
+consist of finite number of elements. Example events are "inbound message is
+received" or "user wants to send an outbound close request". Example actions
+are "send the message with a payload" or "process the payload of the inbound
+message".
+
+.. _Peers: peer_
+.. _communication models: model_
+.. _models: model_
+.. _endpoints: endpoint_
+.. _Endpoints: endpoint_
+
+Sessions
+~~~~~~~~
+Session_ is a logically separate communication cycle between two or more
+peers_. The purpose of why this concept is introduced is to abstract logical
+"connections" from transport-level connections and make it possible to have
+multiple logical "connections" over a single transport connection - this is
+called multiplexing.
+
+Sessions_ have several important attributes:
+
+  - Model_.
+    The most important attribute of a session_. Session's_ model defines how
+    communication progresses within the session_.
+  - `Model type`_.
+    Type of communication - one-to-one or many-to-one. Initiating side is on
+    the left and the accepting is on the right.
+  - Multiplicity.
+    Depends on model type. If the initiating side is "many" there could be only
+    one session at a time - it's called "singledton session". Otherwise
+    unlimited number of different sessions could be created.
+  - Session ID.
+    Each session has an ID that helps to distuingish packets of one session
+    from packets of another.
+  - Service ID/Method ID.
+    Session always belongs to a certain method. And Protobuf method definition
+    in turn contains information about request/response messages format and
+    model type.
+  - Bi-directionality.
+    In which direction packets are sent and when is entirely decided by
+    the session's_ model_ except when the initial packet exchange is performed
+    in `regular sessions`_.
+  - Packet acknowledgement tracking/Duplicate packet tracking.
+    These two things happen within a session using sliding-window-style
+    alghorithm specified in the RPC protocol.
+  - Session end.
+    Session is considered to be ended by the peer when the model is
+    transitioned to it's end-state. In contrast with session initiation there
+    is no exact specification of how sessions are ended. It's entirely up
+    to models to define in which circumstances the session is closed.
+
+.. _Sessions: session_
+.. _sessions: session_
+.. _Session: session_
+.. _peers: peer_
+.. _Model: model_
+.. _Session's: session_
+.. _session's: session_
+.. _Model type: model_type_
+.. _regular sessions: regular_session_
+.. _singleton sessions: singleton_session_
+
+Batching
+********
+The protocol allows to merge multiple logical packets into one real packet if
+there are no conflicts across their fields. For example if there is a need
+to send a packet with some flag and also a packet with a payload - they MAY
+be merged into one packet and sent in a batch.
+
+Session start / Session ID generation
+*************************************
+How `session ID`_ is generated is determined by whether the session_ is a
+`singleton session`_ or a `regular session`_. And it is in turn determined by
+the session's `model type`_.
+
+In **all cases** the initiating side must set 'is_initial' flag to ``true`` in
+the first packet. 'is_initial' flag MUST not be set to ``true`` in any other
+situations.
+
+In case of a **regular session** the session MUST always start with a packet
+sent by the initiating_ side with 'new_session_request_id' field set to a
+locally-unique ID.
+The accepting side MUST respond with a packet_ with 'new_session_request_id'
+field set to the same value and at the same time 'session_id' field set to the
+session ID that is locally-unique for the accepting peer which it will continue
+to use to distinguish packets that belong to different sessions_. After that
+the initiating_ and the accepting_ sides must use this session ID in all
+subsequent packets.
+
+In case of a **singleton session** the session always MUST have a constant
+session ID equal to ``0``. 'new_session_request_id' field must not be used at
+all.
+
+.. _sessions: session_
+.. _initiating: initiative_
+.. _accepting: initiative_
+.. _session ID: session_id_
+.. _model type: model_type_
+
+Packet IDs generation / Packet acknowledgement
+**********************************************
+Each packet_ has an ID which is called `packet ID`_. These IDs are used to
+identify duplicate packets when a packet arrives more than once and also they
+are used to acknowledge the packets that require acknowledgement.
+
+The protocol uses ACK-based packet acknowledgement_ mechanism and
+sliding-window_ type alghorithm for tracking acknowledgements_ and detecting
+duplicate packets_.
+
+
+.. _acknowledgements: _acknowledgement
+.. _acknowledgement: https://en.wikipedia.org/wiki/Acknowledgement_(data_networks)
+.. _sliding-window: https://en.wikipedia.org/wiki/Sliding_window_protocol
+.. _packets: packet_
+.. _packet ID: packet_id_
+
+Models
+~~~~~~
+Models are "communication models" - they are specifications of
+implementations of various communication patterns like request-response or
+publish-subscribe. Models are specified as finite state machines in a
+specialized DSL separate from implementations in "real" programming
+languages.
+
+A model_ is an FSM with finite number of states, inputs ("events") and outputs
+("actions").
+A model_ works by consuming "events" and outputting "actions" and
+transitioning itself to a new state (or staying at the same state). Models
+   also have some additional properties that are described in this section.
+
+Models are also essentially plugins - a model contains the complete
+speicifcation of communication alghorithm - they could be added or removed
+without any modifications in the concrete protocol implementations.
+
+Endpoints use models to track their state. They work as interpreters
+that interpret the programs written in the form of FSM. They pass
+events to them as an input and then receive actions as an output and
+process them. Events and Actions are finite sets and the reader can
+find their specification in the Protobuf code below.
+
+.. note::
+
+  FSM as a form to specify the models was chosen because it's very natural
+  to think in terms of state machines about network connections and how
+  peers connected via network track their state and their expectations about
+  incoming messages as the communication cycle progresses. Finite state
+  machines are very simple and leave little room for errors.
+
+Models could be of two types:
+
+One-to-one
+  Sessions that use models of this type could be created in unlimited number
+  by both initiating and accepting sides.
+
+  Only two peers could participate in a session with a model of such type.
+
+Many-to-one
+  Multiple peers could enter a session with a single peer this model type
+  is used.
+  Only a single session of such models could be maintained at a time. Such
+     session are called "singleton sessions".
+  Though a single peer could maintain multiple endpoints for such a session.
+     Peer on the accepting side always maintains only one endpoint for such a
+     session which is always active.
+
+Facade layer
+============
+Provides user-facing methods. The least complex layer. It contains
+mostly pluming and "syntactic sugar". Code of this layer is supposed
+   to be auto-generated by Protobuf Compiler and provide wrappers around
+   implementation of the second layer.
+
+Glossary
+========
+This section briefly describes commonly used terminology. It doesn't
+contain any detailed info, look at the other sections for this.
+
+.. _peer:
+
+Peer
+  An application process, a participant of a communication process
+  identified by an "identity". A peer sends and receives arbitrary messages
+  defined by the application.
+
+.. _identity:
+
+Identity
+  Arbitrary string that uniquely identifies a peer and is used on
+  application-level to specify message recipient(s).
+
+.. _address:
+
+Address
+  Implementation of a transport procol uses address to connect to a peer.
+
+.. _connection:
+
+Connection
+  Connection over the transport protocol.
+
+.. _datagram:
+
+Datagram
+  Basic unit of communication of the transport proctol. Contains a payload
+  and a header. Payload is a arbitrary sequence of bytes./ And header has
+  the following structure.
+
+.. _model:
+
+Model/Communication model
+  Implementation of a communication pattern such as request-response or
+  publish-subscribe. Model is a declaration of an alghorithm that controls
+  which messages of what kind must be sent to whom, in what order, when
+  the session must be closed, etc.
+
+  Models are defined in a special language-independent DSL as a
+  specialized kind of finite state machine. Model is described by a number
+  of states, transitions between them and some additional model-wise
+  properties.
+
+.. _model_type:
+
+Model type
+  TODO
+
+.. _session:
+
+Session
+  Logical connection between two or more peers. What happens within a
+  single session's lifetime is determined by the corresponding model.
+  Multiple sessions could be created over a single transport protocol
+  connection.
+
+  Session is identified by one or more IDs which could be added or
+  removed within session lifetime.
+
+.. _session_id:
+
+Session ID
+  An ID that is stored in 'session_id' field of a packet that helps to
+  distinguish which packet belongs to which session. It is needed to achieve
+  multiplexing.
+
+.. _regular_session:
+
+Regular session
+  A session_ that is not singleton_. A session_ with a model_ where the
+  initiating side is ``one``. Multiple instances of sessions_ of this type
+  could exist at a time with different session IDs.
+
+.. _singleton: singleton_session_
+
+.. _singleton_session:
+
+Singleton session
+  A session with a model where the initiating side is "many". Such sessions
+  exist only one at a time and always have 'session_id' equal to ``0``.
+
+.. _packet:
+
+Packet
+  TODO
+
+.. _packet_id:
+
+Packet ID
+  TODO
+
+.. _endpoint:
+
+Endpoint
+  Representation of the state of the participation of a peer in the
+  session. It's the same as "socket" is for TCP/IP.
+
+  Endpoint is described by it's current state (as defined in the model's
+  state machine), "initiative" and known remote peers that are registered in
+     the same session.
+
+.. _initiative:
+
+Initiative
+  Initiative indicates whether the peer to which the endpoint belongs to
+  initiated the session or accepted an incoming session initiated by
+  another peer.
+
+*/
+syntax = "proto3";
+
+package onedrive_client.RPC;
+
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/wrappers.proto";
+
+extend google.protobuf.EnumValueOptions {
+  bool local = 50000;
+  bool remote = 50001;
+}
+
+extend google.protobuf.ServiceOptions {
+  uint32 service_id = 50000;
+}
+
+extend google.protobuf.MethodOptions {
+  uint32 method_id = 50000;
+  string model_id = 50001;
+}
+
+enum Event {
+  NEW_INBOUND_PEER = 0 [(local) = true];
+  NEW_OUTBOUND_PEER = 1 [(local) = true];
+  PEER_GONE = 2 [(local) = true];
+  // For outbound messages.
+  // First message sent to a peer in the session.
+  // If there are many recipients only for part of them the message would be
+  // first - the event must be passed to the model.
+  // And in this case SEND_INITIAL action would be applied only for those
+  // peers.
+  OUTBOUND_CLOSE = 3 [(local) = true, (remote) = true];
+  OUTBOUND_PAYLOAD = 4 [(local) = true, (remote) = true];
+  TO_ALL = 5 [(local) = true, (remote) = true];
+  TO_ONE = 6 [(local) = true, (remote) = true];
+  /**
+   * *_CLOSE events - signify that the session is going to be closed and
+   * the peer that sent it will not process any packets anymore except
+   * acknowledgement if it's
+   */
+  INBOUND_INITIAL = 7 [(local) = true, (remote) = true];
+  INBOUND_CLOSE = 8 [(local) = true, (remote) = true];
+  /*
+   * *_CLOSE events signify that the session is going to be closed and
+   * the peer that sent it will not process any packets anymore except
+   * acknowledgement if it's
+   */
+  INBOUND_PAYLOAD = 9 [(local) = true, (remote) = true];
+  REQUIRES_ACKNOWLEDGEMENT = 10 [(local) = true, (remote) = true];
+
+  // Endpoint is to be closed.
+  CLOSE = 11 [(local) = true, (remote) = true];
+}
+
+enum Action {
+  REJECT = 0 [(local) = true, (remote) = true];
+  // Modifiers for SEND_* actions.
+  SEND_TO_ALL = 2 [(local) = true, (remote) = true];
+  SEND_TO_ONE = 3 [(local) = true, (remote) = true];
+  SEND_TO_RANDOM = 4 [(local) = true, (remote) = true];
+  SEND_REPLY = 5 [(local) = true, (remote) = true];
+  // Turn on "is_closing" flag.
+  SEND_CLOSE = 6 [(local) = true, (remote) = true];
+  SEND_PAYLOAD = 7 [(local) = true, (remote) = true];
+  SEND_ERROR = 8 [(local) = true, (remote) = true];
+  // The packet requires acknowledgement.
+  REQUIRE_ACKNOWLEDGEMENT = 9 [(local) = true, (remote) = true];
+  // Feed the payload of the inbound packet to the user-defined handler.
+  PROCESS_INBOUND_PAYLOAD = 10 [(local) = true, (remote) = true];
+  // Ignore the payload of the packet.
+}
+
+enum LogLevel {
+  TRACE = 0;
+  DEBUG = 1;
+  INFO = 2;
+  NOTICE = 3;
+  WARNING = 4;
+  ERROR = 5;
+  CRITICAL = 6;
+}
+
+message LogRecord {
+  LogLevel level = 1;
+  string message = 2;
+  map<string, string> extra = 3;
+}
+
+message Packet {
+  // Used to determine with which service and method the packet is associated
+  // and how to parse the payload.
+  uint32 service_id = 1;
+  uint32 method_id = 2;
+
+  google.protobuf.BytesValue session_id = 3;
+
+  uint32 packet_id = 4;
+  uint32 window_start = 5;
+
+  bool acknowledgement_required = 6;
+  repeated uint32 acknowledges = 7;
+
+  // Payload. Wrapped in BytesValue to make it optional.
+  google.protobuf.BytesValue payload = 8;
+
+  bool is_initial = 9;
+  bool is_closing = 10;
+  bool is_heartbeat = 11;
+
+  bool is_error = 12;
+
+  bool debug = 13;
+  repeated LogRecord log = 14;
+}
+
+message Model {
+  message StateMachine {
+    message Transition {
+      string name = 1;
+      repeated string sources = 2;
+      string destination = 3;
+      string condition = 4;
+      repeated string actions = 5;
+    }
+    repeated string states = 1;
+    string begin = 2;
+    string end = 3;
+    repeated Transition transitions = 4;
+  }
+  string id = 1;
+  string name = 2;
+  bool singleton_session = 3;
+  StateMachine local = 4;
+  StateMachine remote = 5;
+}
+
+extend google.protobuf.FileOptions {
+  repeated Model models = 50000;
+}
+
+option (models) = {
+  id: "REQUEST_RESPONSE",
+  name: "Request-Response",
+  singleton_session: false,
+  local: {
+    states: [
+      "IDLE",
+      "IN_PROGRESS",
+      "CLOSED"
+    ],
+    begin: "IDLE",
+    end: "CLOSED",
+    transitions: [
+      {
+        name: "Wait for the new peer.",
+        condition: "NEW_INBOUND_PEER or NEW_OUTBOUND_PEER",
+        sources: ["IDLE"],
+        destination: "IN_PROGRESS",
+        actions: []
+      },
+      {
+        name: "Reject other peers.",
+        condition: "NEW_INBOUND_PEER or NEW_OUTBOUND_PEER",
+        sources: ["IN_PROGRESS"],
+        destination: "*",
+        actions: ["REJECT"]
+      },
+      {
+        name: "Close when the peer is gone.",
+        condition: "PEER_GONE",
+        sources: ["IN_PROGRESS"],
+        destination: "CLOSED",
+        actions: []
+      },
+      {
+        name: "Close when the endpoint is closed.",
+        condition: "CLOSE or OUTBOUND_CLOSE",
+        sources: ["*"],
+        destination: "CLOSED",
+        actions: []
+      }
+    ]
+  },
+  remote: {
+    states: [
+      "IDLE",
+      "AWAITING_INBOUND_RESPONSE",
+      "AWAITING_OUTBOUND_RESPONSE",
+      "AWAITING_INBOUND_CLOSE",
+      "CLOSED"
+    ],
+    begin: "IDLE",
+    end: "CLOSED",
+    transitions: [
+      // Client route
+      {
+        name: "Send request",
+        condition: "OUTBOUND_PAYLOAD and TO_ONE and not OUTBOUND_CLOSE",
+        sources: ["IDLE"],
+        destination: "AWAITING_INBOUND_RESPONSE",
+        actions: [
+          "SEND_TO_ONE",
+          "SEND_PAYLOAD",
+          "REQUIRE_ACKNOWLEDGEMENT"
+        ]
+      },
+      {
+        name: "Receive the response.",
+        condition: "INBOUND_PAYLOAD and REQUIRES_ACKNOWLEDGEMENT and not INBOUND_CLOSE",
+        sources: ["AWAITING_INBOUND_RESPONSE"],
+        destination: "CLOSED",
+        actions: [
+          "PROCESS_INBOUND_PAYLOAD",
+          "SEND_CLOSE",
+          "SEND_REPLY",
+          "REQUIRE_ACKNOWLEDGEMENT"
+        ]
+      },
+      // Server route.
+      {
+        name: "Receive the request.",
+        condition: "INBOUND_INITIAL and INBOUND_PAYLOAD and REQUIRES_ACKNOWLEDGEMENT and not INBOUND_CLOSE",
+        sources: ["IDLE"],
+        destination: "AWAITING_OUTBOUND_RESPONSE",
+        actions: [
+          "PROCESS_INBOUND_PAYLOAD"
+        ]
+      },
+      {
+        name: "Send response.",
+        condition: "OUTBOUND_PAYLOAD and not OUTBOUND_CLOSE",
+        sources: ["AWAITING_OUTBOUND_RESPONSE"],
+        destination: "AWAITING_INBOUND_CLOSE",
+        actions: [
+          "SEND_TO_ALL",
+          "SEND_PAYLOAD",
+          "REQUIRE_ACKNOWLEDGEMENT"
+        ]
+      },
+      {
+        name: "Inbound close.",
+        condition: "(INBOUND_CLOSE or LOCAL_CLOSED) and REQUIRES_ACKNOWLEDGEMENT",
+        sources: ["*"],
+        destination: "CLOSED",
+        actions: []
+      },
+      {
+        name: "Outbound close.",
+        condition: "(OUTBOUND_CLOSE or LOCAL_CLOSED)",
+        sources: ["AWAITING_INBOUND_RESPONSE", "AWAITING_OUTBOUND_RESPONSE"],
+        destination: "CLOSED",
+        actions: [
+          "SEND_TO_ALL",
+          "SEND_CLOSE",
+          "REQUIRE_ACKNOWLEDGEMENT"
+        ]
+      }
+    ]
+  }
+};

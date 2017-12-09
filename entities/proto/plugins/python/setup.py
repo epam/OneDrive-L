@@ -13,7 +13,7 @@ REQUIREMENTS_PATH = os.path.join(
 
 
 setup(
-    name='onedrive_client.entities.protoc_plugin',
+    name='onedrive_client.entities_protoc_plugin',
     namespace_packages=['onedrive_client'],
     version='0.0.1',
     author='EPAM Systems',
@@ -28,7 +28,8 @@ setup(
     install_requires=list(map(str.strip, open(REQUIREMENTS_PATH))),
     entry_points={
         'console_scripts': [
-            'protoc-gen-entities=onedrive_client.entities.protoc_plugin:main'
+            'protoc-gen-entities=onedrive_client.entities_protoc_plugin.'
+            'protoc_plugin:main'
         ]
     },
     classifiers=[

@@ -2,7 +2,6 @@
 from abc import ABCMeta
 import collections.abc
 import enum
-import importlib
 from typing import Callable, Generic, Iterable, TypeVar
 
 from google.protobuf.descriptor import (
@@ -14,6 +13,18 @@ from google.protobuf.reflection import MakeClass
 
 T = TypeVar('T')
 
+
+def str_to_bytes(value):
+    if isinstance(value, bytes):
+        return value
+    else:
+        try:
+            return value.encode()
+        except UnicodeEncodeError as exc:
+            raise ValueError(exc)
+
+
+str_to_bytes.__name__ = 'bytes'
 
 _TYPE_MAP = {
     FieldDescriptor.TYPE_DOUBLE: (float,),
@@ -120,6 +131,9 @@ class _EntityMeta(ABCMeta):
             attributes['_MESSAGE_CLASS'] = MakeClass(descriptor)
 
         type_ = super().__new__(mcs, name, bases, attributes, **kwargs)
+
+        if descriptor is not None:
+            _REGISTRY[descriptor.full_name] = type_
 
         return type_
 
@@ -245,19 +259,9 @@ class Entity(collections.abc.MutableMapping, metaclass=_EntityMeta):
     def __check_enum(enum_descriptor: EnumDescriptor, value: int) -> bool:
         return value in enum_descriptor.values_by_number
 
-    @staticmethod
-    def __import(spec):
-        package, _, name = spec.rpartition('.')
-        try:
-            module = importlib.import_module(package)
-        except ModuleNotFoundError:
-            return None
-
-        return getattr(module, name)
-
     @classmethod
     def __get_entity(cls, message_descriptor: Descriptor) -> type:
-        return cls.__import(message_descriptor.full_name)
+        return _REGISTRY.get(message_descriptor.full_name)
 
     __VIRTUAL_MODULE = __name__.rsplit('.', 1)[0] + '.virtual'
 
@@ -290,7 +294,7 @@ class Entity(collections.abc.MutableMapping, metaclass=_EntityMeta):
 
     @classmethod
     def __get_enum(cls, enum_descriptor: EnumDescriptor) -> type:
-        return cls.__import(enum_descriptor.full_name)
+        return _REGISTRY.get(enum_descriptor.full_name)
 
     @classmethod
     def __make_enum(cls, enum_descriptor: EnumDescriptor) -> type:
@@ -389,6 +393,11 @@ class Entity(collections.abc.MutableMapping, metaclass=_EntityMeta):
             value = self.__data[item] = collection_cls()
             return value
         elif not self.__is_composite_field(field_descriptor):
+            if field_descriptor.containing_oneof is not None:
+                if any(f in self.__data
+                       for f in field_descriptor.containing_oneof.fields
+                       if f != item):
+                    raise KeyError(item)
             value = field_descriptor.default_value
             self.__data[item] = value
             return value
@@ -408,7 +417,7 @@ class Entity(collections.abc.MutableMapping, metaclass=_EntityMeta):
         if oneof is not None:
             try:
                 next(f.name for f in oneof.fields
-                     if f.name != key and f.name in self)
+                     if f.name != key and f.name in self.__data)
             except StopIteration:
                 pass
             else:
@@ -488,10 +497,61 @@ class Entity(collections.abc.MutableMapping, metaclass=_EntityMeta):
             ', '.join(map(lambda e: ': '.join(map(repr, e)), self.items()))
         )
 
-    def to_protobuf(self):
+    def to_protobuf_message(self):
         """Serialize to Protobuf wire format."""
-        raise NotImplementedError
+        message = self._MESSAGE_CLASS()  # pylint: disable=not-callable
+        for name, value in self.items():
+            field_descriptor = self.__get_field_descriptor(name)
+            if self.__is_repeated_field(field_descriptor):
+                if self.__is_composite_field(field_descriptor):
+                    value = [e.to_protobuf_message() for e in value]
+                getattr(message, name).extend(value)
+            elif self.__is_composite_field(field_descriptor):
+                getattr(message, name).MergeFrom(value.to_protobuf_message())
+            else:
+                setattr(message, name, value)
 
-    def from_protobuf(self, input_bytes):
+        return message
+
+    @classmethod
+    def from_protobuf_message(cls, message):
         """Deserialize to Protobuf wire format."""
-        raise NotImplementedError
+        if (message.DESCRIPTOR.full_name !=
+            cls._MESSAGE_CLASS.DESCRIPTOR.full_name):
+            raise ValueError
+
+        entity = cls()
+        fields = cls._MESSAGE_CLASS.DESCRIPTOR.fields_by_name.items()
+        for field, descriptor in fields:
+            if cls.__is_composite_field(descriptor):
+                sub_entity_cls = cls.__get_or_make_entity(
+                    descriptor.message_type
+                )
+                if cls.__is_repeated_field(descriptor):
+                    value = [
+                        sub_entity_cls.from_protobuf_message(e)
+                        for e in getattr(message, field)
+                    ]
+                else:
+                    value = sub_entity_cls.from_protobuf_message(
+                        getattr(message, field)
+                    )
+
+                entity[field] = value
+            elif cls.__is_repeated_field(descriptor):
+                value = [
+                    e for e in getattr(message, field)
+                ]
+                entity[field] = value
+            else:
+                if (descriptor.containing_oneof is not None and
+                    message.WhichOneof(descriptor.containing_oneof.name) !=
+                    field):
+                    continue
+                entity[field] = getattr(message, field)
+
+        return entity
+
+
+def get_entity(full_name):
+    return _REGISTRY.get(full_name)
