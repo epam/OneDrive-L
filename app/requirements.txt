@@ -4,8 +4,8 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
-daemonize==2.4.7
-psutil==5.2.2
+daemonize==2.4.7          # via -r requirements.in
+psutil==5.6.6             # via -r requirements.in
 py==1.4.34                # via pytest
-pytest==3.2.1
-pyyaml==3.12
+pytest==3.2.1             # via -r requirements.in
+pyyaml==3.12              # via -r requirements.in
