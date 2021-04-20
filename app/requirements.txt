@@ -5,7 +5,12 @@
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
 daemonize==2.4.7
+    # via -r requirements.in
 psutil==5.2.2
-py==1.4.34                # via pytest
+    # via -r requirements.in
+py==1.10.0
+    # via pytest
 pytest==3.2.1
+    # via -r requirements.in
 pyyaml==3.12
+    # via -r requirements.in
