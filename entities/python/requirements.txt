@@ -4,5 +4,5 @@
 #
 #    pip-compile --no-index --output-file requirements.txt requirements.in
 #
-protobuf==3.4.0
-six==1.10.0               # via protobuf
+protobuf==3.18.3
+    # via -r requirements.in
